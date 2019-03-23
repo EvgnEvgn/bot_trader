@@ -4,8 +4,8 @@ class Candle:
         self.open = args[1]
         self.high = args[2]
         self.low = args[3]
-        self.close = args[4]
-        self.volume = args[5]
+        self.close = float(args[4])
+        self.volume = float(args[5])
         self.closeTime = args[6]
         self.quoteAssetVolume = args[7]
         self.numberOfTrades = args[8]
