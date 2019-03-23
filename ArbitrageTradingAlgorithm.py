@@ -157,6 +157,7 @@ def main():
     ticker1 = 'NVDA'
     ticker2 = 'AMD'
 
+    #проверить тип данных, получаемых с внешних ресурсов
     df1 = yf.download(ticker1, start=stdate, end=eddate)
     df2 = yf.download(ticker2, start=stdate, end=eddate)
 
