@@ -23,5 +23,8 @@ result = client.get_historical_klines(ticker, interval, start_date, end_date)
 for candle in result:
     candles.append(Candle(candle))
 
+
+
+
 bla = 0
 
