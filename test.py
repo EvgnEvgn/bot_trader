@@ -1,9 +1,10 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import  ArbitrageTradingAlgorithm as ATA
+import ArbitrageTradingAlgorithm as ATA
 import os
-
+import json
+from CurrencyPair import CurrencyPair
 # # Length of series
 # N = 100
 #
@@ -70,22 +71,57 @@ pair1 = 'XRPETH'
 pair2 = 'ETHUSDT'
 pair3 = 'BTCUSDT'
 
+#
+# print(pair1.rfind(cur))
+# print(pair2.rfind(cur))
+# print(pair3.rfind(cur))
+#
+# arr = [pair1, pair2, pair3]
+# print(arr)
+# print(arr.pop())
+# print(arr)
+#
+# X1 = np.random.normal(0, 1, 100)
+# # # Integrate it to make it I(1)
+# X1 = np.cumsum(X1)
+# xs = np.linspace(1,100,len(X1))
+#
+# plt.plot(np.repeat(-1, len(X1)), 'r--')
+# plt.plot(np.repeat(1, len(X1)), 'y--')
+# plt.plot(X1, color='blue')
+# plt.show()
 
-print(pair1.rfind(cur))
-print(pair2.rfind(cur))
-print(pair3.rfind(cur))
+# data = {}
+# data['people'] = []
+# data['people'].append({
+#     'name': 'Scott',
+#     'website': 'stackabuse.com',
+#     'from': 'Nebraska'
+# })
+# data['people'].append({
+#     'name': 'Larry',
+#     'website': 'google.com',
+#     'from': 'Michigan'
+# })
+# data['people'].append({
+#     'name': 'Tim',
+#     'website': 'apple.com',
+#     'from': 'Alabama'
+# })
+data = {}
 
-arr = [pair1, pair2, pair3]
-print(arr)
-print(arr.pop())
-print(arr)
+# with open('data.json', 'r+') as json_file:
+#     data = json.load(json_file)
+#     if 'column' not in data:
+#         data['column'] = []
+#     data['column'].append({
+#         '12': '2'
+#     })
+#     json.dump(data, json_file)
 
-X1 = np.random.normal(0, 1, 100)
-# # Integrate it to make it I(1)
-X1 = np.cumsum(X1)
-xs = np.linspace(1,100,len(X1))
+#with open('data.json', 'w') as json_file:
 
-plt.plot(np.repeat(-1, len(X1)), 'r--')
-plt.plot(np.repeat(1, len(X1)), 'y--')
-plt.plot(X1, color='blue')
-plt.show()
+currency_pair = CurrencyPair()
+currency_pair.first_currency_name = 'kek'
+print(currency_pair.first_currency_name)
+print(currency_pair.second_currency_name)

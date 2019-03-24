@@ -4,7 +4,7 @@ from binance.websockets import BinanceSocketManager
 import ArbitrageTradingAlgorithm as ATA
 import pandas as pd
 from CurrencyPair import CurrencyPair
-import config
+from config import Config, BinanceConfig
 import os
 
 
@@ -19,28 +19,31 @@ def log_info(path, data):
     print(data)
 
 
-def search_cointegrated_currency_pairs(interval, s_date, e_date, currency_pair, log_path):
+def get_currency_pair_closes(currency_pair, current_currency_pair_path, interval, s_date, e_date, client):
+
     first_currency_candles = []
     second_currency_candles = []
 
     first_currency_closes = []
     second_currency_closes = []
+    log_info(current_currency_pair_path,
+             "Получаем с бинанса данные о свечах пар {0} и {1}...".format(currency_pair.first_currency_name,
+                                                                          currency_pair.second_currency_name))
+    result1 = client.get_historical_klines(currency_pair.first_currency_name, interval, s_date, e_date)
+    result2 = client.get_historical_klines(currency_pair.second_currency_name, interval, s_date, e_date)
 
-    current_currency_pair_path = '{0}/{1}_{2}'.format(log_path, currency_pair[0], currency_pair[1])
-
-    if not os.path.isdir(current_currency_pair_path):
-        os.mkdir(current_currency_pair_path)
-
-    print("Получаем с бинанса данные о свечах пар {0} и {1}...".format(currency_pair[0], currency_pair[1]))
-    result1 = client.get_historical_klines(currency_pair[0], interval, s_date, e_date)
-    result2 = client.get_historical_klines(currency_pair[1], interval, s_date, e_date)
-
-    print("Данные пришли.")
+    log_info(current_currency_pair_path, "Данные пришли.")
     result1_len = len(result1)
     result2_len = len(result2)
 
-    print("Кол-во данных по {0}: {1}.".format(currency_pair[0], result1_len))
-    print("Кол-во данных по {0}: {1}.".format(currency_pair[1], result2_len))
+    log_info(current_currency_pair_path,
+             "Кол-во данных по {0}: {1}.".format(currency_pair.first_currency_name, result1_len))
+    log_info(current_currency_pair_path,
+             "Кол-во данных по {0}: {1}.".format(currency_pair.second_currency_name, result2_len))
+
+    if result1_len == 0 or result2_len == 0:
+        log_info(current_currency_pair_path, "Данных нет.")
+        return
 
     diff = result1_len - result2_len
     diff_percent = 0.0
@@ -48,11 +51,12 @@ def search_cointegrated_currency_pairs(interval, s_date, e_date, currency_pair, 
 
     if diff > 0:
         diff_percent = abs(diff) / result1_len
+        is_first_currency_more = True
     else:
         diff_percent = abs(diff) / result2_len
 
-    if diff_percent > config.Config.SERIES_DIFFERENCE_PERCENT_THRESHOLD:
-        log_info(current_currency_pair_path, "Данные по валютам отличаются в размерах.")
+    if diff_percent > Config.SERIES_DIFFERENCE_PERCENT_THRESHOLD:
+        log_info(current_currency_pair_path, "Данные по валютам слишком отличаются в размерах.")
         return
 
     elif is_first_currency_more:
@@ -70,9 +74,24 @@ def search_cointegrated_currency_pairs(interval, s_date, e_date, currency_pair, 
         first_currency_closes.append(first_currency_candle.close)
         second_currency_closes.append(second_currency_candle.close)
 
-    first_currency_closes, second_currency_closes = pd.Series(first_currency_closes), pd.Series(second_currency_closes)
+    return pd.Series(first_currency_closes), pd.Series(second_currency_closes)
 
-    currency_pair = CurrencyPair(currency_pair[0], first_currency_closes, currency_pair[1], second_currency_closes)
+
+def check_cointegration_for_currency_pair(interval, s_date, e_date, currency_pair, log_path, client):
+
+    current_currency_pair_path = '{0}/{1}_{2}'.format(log_path, currency_pair.first_currency_name,
+                                                      currency_pair.second_currency_name)
+
+    if not os.path.isdir(current_currency_pair_path):
+        os.mkdir(current_currency_pair_path)
+    else:
+        return
+
+    first_currency_closes, second_currency_closes = get_currency_pair_closes(currency_pair, current_currency_pair_path,
+                                                                             interval, s_date, e_date, client)
+
+    currency_pair.first_currency_closes = first_currency_closes
+    currency_pair.second_currency_closes = second_currency_closes
 
     ATA.run(currency_pair, current_currency_pair_path)
 
@@ -92,32 +111,39 @@ def get_grouped_tickers(tickers, major_currencies):
     return grouped_tickers
 
 
-major_currencies = ['BTC', 'ETH', 'USDT', 'USDC']
+def run():
 
-client = Client(config.BinanceConfig.API_KEY, config.BinanceConfig.API_SECRET)
+    major_currencies = ['BTC', 'ETH', 'USDT', 'USDC']
 
-tickers = client.get_all_tickers()
+    client = Client(BinanceConfig.API_KEY, BinanceConfig.API_SECRET)
 
-grouped_tickers = get_grouped_tickers(tickers, major_currencies)
+    tickers = client.get_all_tickers()
 
-interval = '15m'
-start_date = '2019-02-23 15:00 UTC'
-end_date = '2019-03-23 15:00 UTC'
+    grouped_tickers = get_grouped_tickers(tickers, major_currencies)
 
-for major_currency, gp in grouped_tickers.items():
-    major_currency_path = '{0}/{1}'.format(config.Config.LOGGING_PATH, major_currency)
-    print("Мажорная валюта: {0}.".format(major_currency))
+    interval = BinanceConfig.TICKERS_GETTER_INTERVAL
+    start_date = BinanceConfig.TICKERS_GETTER_START_DATE
+    end_date = BinanceConfig.TICKERS_GETTER_END_DATE
 
-    if not os.path.isdir(major_currency_path):
-        os.mkdir(major_currency_path)
+    for major_currency, gp in grouped_tickers.items():
+        major_currency_path = '{0}/{1}'.format(Config.LOGGING_PATH, major_currency)
+        print("Мажорная валюта: {0}.".format(major_currency))
 
-    current_grouped_tickers = gp
-    current_tickers_len = len(current_grouped_tickers)
+        if not os.path.isdir(major_currency_path):
+            os.mkdir(major_currency_path)
 
-    for i in range(0, current_tickers_len - 1):
-        first_currency = current_grouped_tickers.pop()
+        current_grouped_tickers = gp
+        current_tickers_len = len(current_grouped_tickers)
 
-        for second_currency in current_grouped_tickers:
-            search_cointegrated_currency_pairs(interval, start_date, end_date, (first_currency, second_currency), major_currency_path)
+        for i in range(0, current_tickers_len - 1):
+            first_currency = current_grouped_tickers.pop()
+
+            for second_currency in current_grouped_tickers:
+                currency_pair = CurrencyPair()
+                currency_pair.first_currency_name = first_currency
+                currency_pair.second_currency_name = second_currency
+
+                check_cointegration_for_currency_pair(interval, start_date, end_date, currency_pair, major_currency_path, client)
 
 
+run()
