@@ -7,6 +7,8 @@ import json
 from CurrencyPair import CurrencyPair
 from TradingAnalyzeException import TradingAnalyzeException
 import ArbitrageTradingAlgorithm as ATA
+from config import BinanceConfig
+import dateparser as dp
 
 # # Length of series
 # N = 100
@@ -122,21 +124,4 @@ data = {}
 #     })
 #     json.dump(data, json_file)
 
-#with open('data.json', 'w') as json_file:
-try:
-    currency_pair = CurrencyPair()
-    currency_pair.first_currency_name = 'kek'
-    print(currency_pair.first_currency_name)
-    print(currency_pair.second_currency_name)
-    raise TradingAnalyzeException("тут шо-то происходит", "path")
 
-except TradingAnalyzeException as ex:
-    print(ex.message)
-    print(ex.log_path)
-
-currency_pair = CurrencyPair()
-currency_pair.first_currency_name = 'PUKKAK'
-currency_pair.second_currency_name = 'PISSIK'
-currency_pair.first_currency_closes = [1, 2, 3]
-currency_pair.second_currency_closes = [1, 2, 3]
-ATA.log_cointegration_info(currency_pair)
