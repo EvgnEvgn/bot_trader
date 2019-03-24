@@ -12,28 +12,28 @@ import dateparser as dp
 
 
 def get_major_currency_path(major_currency):
-
     start_date = dp.parse(BinanceConfig.TICKERS_GETTER_START_DATE).strftime("%d-%m-%Y")
 
     end_date = dp.parse(BinanceConfig.TICKERS_GETTER_END_DATE).strftime("%d-%m-%Y")
-    major_currency_path = '{0}_{1}_{2}_{3}'.format(major_currency,
-                                                   BinanceConfig.TICKERS_GETTER_INTERVAL,
-                                                   start_date,
-                                                   end_date)
+    major_currency_path = '{0}/{1}_{2}_{3}_{4}'.format(Config.LOGGING_PATH,
+                                                       major_currency,
+                                                       BinanceConfig.TICKERS_GETTER_INTERVAL,
+                                                       start_date,
+                                                       end_date)
 
     return major_currency_path
 
 
-def set_currency_pair_closes(currency_pair, current_currency_pair_path, interval, s_date, e_date, client)-> CurrencyPair:
-
+def set_currency_pair_closes(currency_pair, current_currency_pair_path, interval, s_date, e_date,
+                             client) -> CurrencyPair:
     first_currency_candles = []
     second_currency_candles = []
 
     first_currency_closes = []
     second_currency_closes = []
     Logger.log_info(current_currency_pair_path,
-             "Получаем с бинанса данные о свечах пар {0} и {1}...".format(currency_pair.first_currency_name,
-                                                                          currency_pair.second_currency_name))
+                    "Получаем с бинанса данные о свечах пар {0} и {1}...".format(currency_pair.first_currency_name,
+                                                                                 currency_pair.second_currency_name))
     result1 = client.get_historical_klines(currency_pair.first_currency_name, interval, s_date, e_date)
     result2 = client.get_historical_klines(currency_pair.second_currency_name, interval, s_date, e_date)
 
@@ -42,9 +42,9 @@ def set_currency_pair_closes(currency_pair, current_currency_pair_path, interval
     result2_len = len(result2)
 
     Logger.log_info(current_currency_pair_path,
-             "Кол-во данных по {0}: {1}.".format(currency_pair.first_currency_name, result1_len))
+                    "Кол-во данных по {0}: {1}.".format(currency_pair.first_currency_name, result1_len))
     Logger.log_info(current_currency_pair_path,
-             "Кол-во данных по {0}: {1}.".format(currency_pair.second_currency_name, result2_len))
+                    "Кол-во данных по {0}: {1}.".format(currency_pair.second_currency_name, result2_len))
 
     if result1_len == 0 or result2_len == 0:
         raise TradingAnalyzeException("Данных нет.", current_currency_pair_path,
@@ -126,7 +126,6 @@ def get_grouped_tickers(tickers, major_currencies):
 
 
 def run():
-
     major_currencies = ['BTC', 'ETH', 'USDT', 'USDC']
 
     client = Client(BinanceConfig.API_KEY, BinanceConfig.API_SECRET)
