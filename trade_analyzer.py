@@ -6,6 +6,7 @@ import pandas as pd
 from CurrencyPair import CurrencyPair
 from config import Config, BinanceConfig
 import os
+from TradingAnalyzeException import TradingAnalyzeException
 
 
 def write_to_file(path, data, filename='log.txt'):
@@ -19,7 +20,8 @@ def log_info(path, data):
     print(data)
 
 
-def get_currency_pair_closes(currency_pair, current_currency_pair_path, interval, s_date, e_date, client):
+def set_currency_pair_closes(currency_pair, current_currency_pair_path, interval, s_date, e_date, client)-> CurrencyPair:
+
     first_currency_candles = []
     second_currency_candles = []
 
@@ -41,8 +43,7 @@ def get_currency_pair_closes(currency_pair, current_currency_pair_path, interval
              "Кол-во данных по {0}: {1}.".format(currency_pair.second_currency_name, result2_len))
 
     if result1_len == 0 or result2_len == 0:
-        log_info(current_currency_pair_path, "Данных нет.")
-        return
+        raise TradingAnalyzeException(current_currency_pair_path, "Данных нет.")
 
     diff = result1_len - result2_len
     diff_percent = 0.0
@@ -55,8 +56,7 @@ def get_currency_pair_closes(currency_pair, current_currency_pair_path, interval
         diff_percent = abs(diff) / result2_len
 
     if diff_percent > Config.SERIES_DIFFERENCE_PERCENT_THRESHOLD:
-        log_info(current_currency_pair_path, "Данные по валютам слишком отличаются в размерах.")
-        return
+        raise TradingAnalyzeException(current_currency_pair_path, "Данные по валютам слишком отличаются в размерах.")
 
     elif is_first_currency_more:
         result1 = result1[abs(diff):]
@@ -73,26 +73,30 @@ def get_currency_pair_closes(currency_pair, current_currency_pair_path, interval
         first_currency_closes.append(first_currency_candle.close)
         second_currency_closes.append(second_currency_candle.close)
 
-    return pd.Series(first_currency_closes), pd.Series(second_currency_closes)
+    currency_pair.first_currency_name = pd.Series(first_currency_closes)
+    currency_pair.second_currency_closes = pd.Series(second_currency_closes)
+
+    return currency_pair
 
 
 def calculate_cointegration_for_currency_pair(interval, s_date, e_date, currency_pair, log_path,
                                               client) -> CurrencyPair:
-    current_currency_pair_path = '{0}/{1}_{2}'.format(log_path, currency_pair.first_currency_name,
+    try:
+        current_currency_pair_path = '{0}/{1}_{2}'.format(log_path, currency_pair.first_currency_name,
                                                       currency_pair.second_currency_name)
 
-    if not os.path.isdir(current_currency_pair_path):
-        os.mkdir(current_currency_pair_path)
-    else:
-        return currency_pair
+        if not os.path.isdir(current_currency_pair_path):
+            os.mkdir(current_currency_pair_path)
+        else:
+            return currency_pair
 
-    first_currency_closes, second_currency_closes = get_currency_pair_closes(currency_pair, current_currency_pair_path,
-                                                                             interval, s_date, e_date, client)
+        currency_pair = set_currency_pair_closes(currency_pair, current_currency_pair_path,
+                                                 interval, s_date, e_date, client)
 
-    currency_pair.first_currency_closes = first_currency_closes
-    currency_pair.second_currency_closes = second_currency_closes
+        return ATA.run(currency_pair, current_currency_pair_path)
 
-    return ATA.run(currency_pair, current_currency_pair_path)
+    except TradingAnalyzeException as ex:
+        log_info(ex.log_path, ex.message)
 
 
 def get_grouped_tickers(tickers, major_currencies):
@@ -111,6 +115,7 @@ def get_grouped_tickers(tickers, major_currencies):
 
 
 def run():
+
     major_currencies = ['BTC', 'ETH', 'USDT', 'USDC']
 
     client = Client(BinanceConfig.API_KEY, BinanceConfig.API_SECRET)
