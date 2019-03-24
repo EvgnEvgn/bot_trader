@@ -26,18 +26,22 @@ class Logger:
                   'r+') as json_file:
             json_data = json.load(json_file)
             if 'cointegrated_pairs' not in json_data:
-                json_data['cointegrated_pairs'] = []
+                json_data['cointegrated_pairs'] = {}
 
             pair_in_str = '{0}_{1}'.format(currency_pair.first_currency_name, currency_pair.second_currency_name)
-            cointegrated_pair_info = {
-                pair_in_str: {
-                    '{0}_closes_amount'.format(currency_pair.first_currency_name): len(
+
+            info_pair = {
+                '{0}_closes_amount'.format(currency_pair.first_currency_name): len(
                         currency_pair.first_currency_closes),
-                    '{0}_closes_amount'.format(currency_pair.second_currency_name): len(
-                        currency_pair.second_currency_closes)
-                }
+                '{0}_closes_amount'.format(currency_pair.second_currency_name): len(
+                        currency_pair.second_currency_closes),
+                '{0}_volume'.format(currency_pair.first_currency_name):
+                    currency_pair.first_currency_volume,
+                '{0}_volume'.format(currency_pair.second_currency_name):
+                        currency_pair.second_currency_volume
             }
-            json_data['cointegrated_pairs'].append(cointegrated_pair_info)
+
+            json_data['cointegrated_pairs'][pair_in_str] = info_pair
 
             # устанавливаем на начало, перезаписывая весь файл
             json_file.seek(0)

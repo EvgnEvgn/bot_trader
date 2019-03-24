@@ -158,6 +158,7 @@ def run():
                     result_cointegration_currency_pair.set_second_currency_volume(
                         client.get_ticker(symbol=result_cointegration_currency_pair.second_currency_name)
                             .get('quoteVolume'))
+                    Logger.log_cointegration_info(result_cointegration_currency_pair)
 
 
 run()
