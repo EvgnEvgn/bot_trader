@@ -6,6 +6,7 @@ import os
 from config import Config
 import json
 from CurrencyPair import CurrencyPair
+from os import path as os_path
 
 
 def check_for_stationarity(X, cutoff=0.01):
@@ -67,12 +68,13 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str) -> CurrencyPair:
                                                           currency_pair.second_currency_name))
         plt.clf()
 
-        log_info(log_path, 'Z = {0}.\n z_upper_limit = {1}.\n z_lower_limit = {2}'.format(z, z_upper_limit, z_lower_limit))
+        log_info(log_path,
+                 'Z = {0}.\n z_upper_limit = {1}.\n z_lower_limit = {2}'.format(z, z_upper_limit, z_lower_limit))
 
     return currency_pair
 
 
-def run(currency_pair: CurrencyPair, log_path: str=None) -> CurrencyPair:
+def run(currency_pair: CurrencyPair, log_path: str = None) -> CurrencyPair:
     print("Выполняется проверка коинтеграции валютных пар {0} и {1}.".format(currency_pair.first_currency_name,
                                                                              currency_pair.second_currency_name))
 
@@ -94,7 +96,7 @@ def run(currency_pair: CurrencyPair, log_path: str=None) -> CurrencyPair:
 
 
 def write_to_file(path, data, filename='log.txt'):
-    file = open('{0}/{1}'.format(path, filename), 'a+')
+    file = open(os_path.join(path, filename), 'a+')
     file.write(data + '\n')
     file.close()
 
@@ -122,22 +124,24 @@ def log_cointegration_info(currency_pair):
 
     data = 'Найдена коинтеграция в паре {0}-{1}. Ряд остатков стационарен!'.format(currency_pair.first_currency_name,
                                                                                    currency_pair.second_currency_name)
-    write_to_file(Config.COINTEGRATION_LOG_PATH, data, 'log_cointegration_info.txt')
 
-    json_data = {}
-    with open('{0}/{1}'.format(Config.COINTEGRATION_LOG_PATH, 'log_cointegration_info.json', mode='r')) as json_file:
+    write_to_file(Config.COINTEGRATION_LOG_PATH, data, Config.COINTEGRATION_INFO_TXT_FILENAME)
+
+    with open(os_path.join(Config.COINTEGRATION_LOG_PATH, Config.COINTERGRATION_INFO_JSON_FILENAME), 'r+') as json_file:
         json_data = json.load(json_file)
         if 'cointegrated_pairs' not in json_data:
             json_data['cointegrated_pairs'] = []
 
-    pair_in_str = '{0}_{1}'.format(currency_pair.first_currency_name, currency_pair.second_currency_name)
-    cointegrated_pair_info = {
-        pair_in_str: {
-            '{0}_closes_amount'.format(currency_pair.first_currency_name): len(currency_pair.first_currency_closes),
-            '{0}_closes_amount'.format(currency_pair.second_currency_name): len(currency_pair.second_currency_closes)
+        pair_in_str = '{0}_{1}'.format(currency_pair.first_currency_name, currency_pair.second_currency_name)
+        cointegrated_pair_info = {
+            pair_in_str: {
+                '{0}_closes_amount'.format(currency_pair.first_currency_name): len(currency_pair.first_currency_closes),
+                '{0}_closes_amount'.format(currency_pair.second_currency_name): len(
+                    currency_pair.second_currency_closes)
+            }
         }
-    }
-    json_data['cointegrated_pairs'].append(cointegrated_pair_info)
+        json_data['cointegrated_pairs'].append(cointegrated_pair_info)
 
-    with open('{0}/{1}'.format(Config.COINTEGRATION_LOG_PATH, 'log_cointegration_info.json', mode='w')) as json_file:
-        json.dump(data, json_file)
+        # устанавливаем на начало, перезаписывая весь файл
+        json_file.seek(0)
+        json.dump(json_data, json_file, ensure_ascii=False)

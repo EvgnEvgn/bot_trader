@@ -2,7 +2,8 @@ class Config:
 
     LOGGING_PATH = 'C:/ArbitrageTrading'
     COINTEGRATION_LOG_PATH = 'C:/ArbitrageTrading/CointegrationInfos'
-
+    COINTERGRATION_INFO_JSON_FILENAME = 'log_cointegration_info.json'
+    COINTEGRATION_INFO_TXT_FILENAME = 'log_cointegration_info.txt'
     SERIES_DIFFERENCE_PERCENT_THRESHOLD = 0.2
 
 

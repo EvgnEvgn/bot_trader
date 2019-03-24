@@ -6,6 +6,7 @@ import os
 import json
 from CurrencyPair import CurrencyPair
 from TradingAnalyzeException import TradingAnalyzeException
+import ArbitrageTradingAlgorithm as ATA
 
 # # Length of series
 # N = 100
@@ -132,3 +133,10 @@ try:
 except TradingAnalyzeException as ex:
     print(ex.message)
     print(ex.log_path)
+
+currency_pair = CurrencyPair()
+currency_pair.first_currency_name = 'PUKKAK'
+currency_pair.second_currency_name = 'PISSIK'
+currency_pair.first_currency_closes = [1, 2, 3]
+currency_pair.second_currency_closes = [1, 2, 3]
+ATA.log_cointegration_info(currency_pair)

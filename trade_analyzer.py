@@ -97,6 +97,8 @@ def calculate_cointegration_for_currency_pair(interval, s_date, e_date, currency
 
     except TradingAnalyzeException as ex:
         log_info(ex.log_path, ex.message)
+    except Exception as ex:
+        print(ex)
     finally:
         return currency_pair
 
@@ -147,7 +149,7 @@ def run():
                 currency_pair = CurrencyPair()
                 currency_pair.first_currency_name = first_currency
                 currency_pair.second_currency_name = second_currency
-
+                # TODO если по first_currency данные не приходят, сделать break
                 result_cointegration_currency_pair = calculate_cointegration_for_currency_pair(interval, start_date,
                                                                                                end_date, currency_pair,
                                                                                                major_currency_path,
