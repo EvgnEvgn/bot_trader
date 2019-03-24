@@ -20,7 +20,6 @@ def log_info(path, data):
 
 
 def get_currency_pair_closes(currency_pair, current_currency_pair_path, interval, s_date, e_date, client):
-
     first_currency_candles = []
     second_currency_candles = []
 
@@ -77,15 +76,15 @@ def get_currency_pair_closes(currency_pair, current_currency_pair_path, interval
     return pd.Series(first_currency_closes), pd.Series(second_currency_closes)
 
 
-def check_cointegration_for_currency_pair(interval, s_date, e_date, currency_pair, log_path, client):
-
+def calculate_cointegration_for_currency_pair(interval, s_date, e_date, currency_pair, log_path,
+                                              client) -> CurrencyPair:
     current_currency_pair_path = '{0}/{1}_{2}'.format(log_path, currency_pair.first_currency_name,
                                                       currency_pair.second_currency_name)
 
     if not os.path.isdir(current_currency_pair_path):
         os.mkdir(current_currency_pair_path)
     else:
-        return
+        return currency_pair
 
     first_currency_closes, second_currency_closes = get_currency_pair_closes(currency_pair, current_currency_pair_path,
                                                                              interval, s_date, e_date, client)
@@ -93,7 +92,7 @@ def check_cointegration_for_currency_pair(interval, s_date, e_date, currency_pai
     currency_pair.first_currency_closes = first_currency_closes
     currency_pair.second_currency_closes = second_currency_closes
 
-    ATA.run(currency_pair, current_currency_pair_path)
+    return ATA.run(currency_pair, current_currency_pair_path)
 
 
 def get_grouped_tickers(tickers, major_currencies):
@@ -112,7 +111,6 @@ def get_grouped_tickers(tickers, major_currencies):
 
 
 def run():
-
     major_currencies = ['BTC', 'ETH', 'USDT', 'USDC']
 
     client = Client(BinanceConfig.API_KEY, BinanceConfig.API_SECRET)
@@ -143,7 +141,19 @@ def run():
                 currency_pair.first_currency_name = first_currency
                 currency_pair.second_currency_name = second_currency
 
-                check_cointegration_for_currency_pair(interval, start_date, end_date, currency_pair, major_currency_path, client)
+                result_cointegration_currency_pair = calculate_cointegration_for_currency_pair(interval, start_date,
+                                                                                               end_date, currency_pair,
+                                                                                               major_currency_path,
+                                                                                               client)
+                # Установим вычеслим объем торгов если пары коинтегрированны
+                if result_cointegration_currency_pair.is_stationarity:
+                    # TODO понять разницу между quoteVolume и просто volume
+                    result_cointegration_currency_pair.set_first_currency_volume(
+                        client.get_ticker(symbol=result_cointegration_currency_pair.first_currency_name)
+                            .get('quoteVolume'))
+                    result_cointegration_currency_pair.set_second_currency_volume(
+                        client.get_ticker(symbol=result_cointegration_currency_pair.second_currency_name)
+                            .get('quoteVolume'))
 
 
 run()

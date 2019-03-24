@@ -5,6 +5,7 @@ from statsmodels.tsa.stattools import coint, adfuller
 import os
 from config import Config
 import json
+from CurrencyPair import CurrencyPair
 
 
 def check_for_stationarity(X, cutoff=0.01):
@@ -16,14 +17,16 @@ def check_for_stationarity(X, cutoff=0.01):
         return False
 
 
-def get_z_score(currency_pair, log_path):
+def set_z_score(currency_pair: CurrencyPair, log_path: str) -> CurrencyPair:
     x = sm.add_constant(currency_pair.first_currency_closes)
     y = currency_pair.second_currency_closes
     model = sm.OLS(y, x).fit()
 
     resid = model.resid
 
-    is_stationarity = check_for_stationarity(resid)
+    is_resid_stationarity = check_for_stationarity(resid)
+
+    currency_pair.is_stationarity = is_resid_stationarity
 
     if log_path is not None:
         plt.plot(resid, color='blue')
@@ -36,39 +39,40 @@ def get_z_score(currency_pair, log_path):
         log_info(log_path, "Ряд остатков валютных пар {0} и {1} является {2}".format(currency_pair.first_currency_name,
                                                                                      currency_pair.second_currency_name,
                                                                                      get_stationarity_state(
-                                                                                         is_stationarity)))
+                                                                                         is_resid_stationarity)))
+    if is_resid_stationarity:
+        b = model.params[0]
 
-    if not is_stationarity:
-        return
+        x = currency_pair.first_currency_closes
 
-    b = model.params[0]
+        y = currency_pair.second_currency_closes
 
-    x = currency_pair.first_currency_closes
+        residual = y - b * x
 
-    y = currency_pair.second_currency_closes
+        z = (residual - np.mean(residual)) / np.std(residual)
 
-    residual = y - b * x
+        # получаем числовые константы
+        z_upper_limit = np.mean(z) + np.std(z)
+        z_lower_limit = np.mean(z) - np.std(z)
 
-    z = (residual - np.mean(residual)) / np.std(residual)
+        currency_pair.z = z
+        currency_pair.z_upper_limit = z_upper_limit
+        currency_pair.z_lower_limit = z_lower_limit
 
-    # получаем числовые константы
-    z_upper_limit = np.mean(z) + np.std(z)
-    z_lower_limit = np.mean(z) - np.std(z)
+        log_cointegration_info(currency_pair)
+        plt.plot(z, color='black')
+        plt.plot(np.repeat(z_upper_limit, len(z)), 'r--')
+        plt.plot(np.repeat(z_lower_limit, len(z)), 'y--')
+        plt.savefig('{0}/{1}{2}_z_with_limits.png'.format(log_path, currency_pair.first_currency_name,
+                                                          currency_pair.second_currency_name))
+        plt.clf()
 
-    log_cointegration_info(currency_pair)
-    plt.plot(z, color='black')
-    plt.plot(np.repeat(z_upper_limit, len(z)), 'r--')
-    plt.plot(np.repeat(z_lower_limit, len(z)), 'y--')
-    plt.savefig('{0}/{1}{2}_z_with_limits.png'.format(log_path, currency_pair.first_currency_name,
-                                                      currency_pair.second_currency_name))
-    plt.clf()
+        log_info(log_path, 'Z = {0}.\n z_upper_limit = {1}.\n z_lower_limit = {2}'.format(z, z_upper_limit, z_lower_limit))
 
-    log_info(log_path, 'Z = {0}.\n z_upper_limit = {1}.\n z_lower_limit = {2}'.format(z, z_upper_limit, z_lower_limit))
-
-    return z, z_upper_limit, z_lower_limit
+    return currency_pair
 
 
-def run(currency_pair, log_path=None):
+def run(currency_pair: CurrencyPair, log_path: str=None) -> CurrencyPair:
     print("Выполняется проверка коинтеграции валютных пар {0} и {1}.".format(currency_pair.first_currency_name,
                                                                              currency_pair.second_currency_name))
 
@@ -82,9 +86,9 @@ def run(currency_pair, log_path=None):
                  get_stationarity_state_info(currency_pair.second_currency_name, is_stationarity_second_currency))
 
     if is_stationarity_first_currency or is_stationarity_second_currency:
-        return False
+        return currency_pair
 
-    get_z_score(currency_pair, log_path)
+    return set_z_score(currency_pair, log_path)
 
     # Алгоритм открытий и закрытий позиций по валютам
 
