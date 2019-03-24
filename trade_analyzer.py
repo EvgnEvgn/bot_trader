@@ -73,7 +73,7 @@ def calculate_cointegration_for_currency_pair(interval, s_date, e_date, currency
                                               client) -> CurrencyPair:
     try:
         current_currency_pair_path = '{0}/{1}_{2}'.format(log_path, currency_pair.first_currency_name,
-                                                      currency_pair.second_currency_name)
+                                                          currency_pair.second_currency_name)
 
         if not os.path.isdir(current_currency_pair_path):
             os.mkdir(current_currency_pair_path)

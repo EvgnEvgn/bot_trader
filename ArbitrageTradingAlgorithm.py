@@ -16,6 +16,29 @@ def check_for_stationarity(X, cutoff=0.01):
         return False
 
 
+def plot_residuals(plot_path, currency_pair, residuals):
+
+    plt.clf()
+    plt.plot(residuals, color='blue')
+    plt.title("Residuals of pairs: {0} and {1}".format(currency_pair.first_currency_name,
+                                                       currency_pair.second_currency_name))
+
+    plt.savefig('{0}/{1}{2}_residuals.png'.format(plot_path, currency_pair.first_currency_name,
+                                                  currency_pair.second_currency_name), figsize=(20, 10), dpi=350)
+    plt.close()
+
+
+def plot_z_orders_with_limits(z_orders, z_upper_limit, z_lower_limit, log_path, currency_pair):
+
+    plt.clf()
+    plt.plot(z_orders, color='black')
+    plt.plot(np.repeat(z_upper_limit, len(z_orders)), 'r--')
+    plt.plot(np.repeat(z_lower_limit, len(z_orders)), 'y--')
+    plt.savefig('{0}/{1}{2}_z_with_limits.png'.format(log_path, currency_pair.first_currency_name,
+                                                      currency_pair.second_currency_name), figsize=(20, 10), dpi=350)
+    plt.close()
+
+
 def set_z_score(currency_pair: CurrencyPair, log_path: str) -> CurrencyPair:
     x = sm.add_constant(currency_pair.first_currency_closes)
     y = currency_pair.second_currency_closes
@@ -28,18 +51,13 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str) -> CurrencyPair:
     currency_pair.is_stationarity = is_resid_stationarity
 
     if log_path is not None:
-        plt.clf()
-        plt.plot(resid, color='blue')
-        plt.title("Residuals of pairs: {0} and {1}".format(currency_pair.first_currency_name,
-                                                           currency_pair.second_currency_name))
+        plot_residuals(log_path, currency_pair, resid)
 
-        plt.savefig('{0}/{1}{2}_residuals.png'.format(log_path, currency_pair.first_currency_name,
-                                                      currency_pair.second_currency_name), figsize=(17, 10), dpi=350)
-        plt.close()
-        Logger.log_info(log_path, "Ряд остатков валютных пар {0} и {1} является {2}".format(currency_pair.first_currency_name,
-                                                                                     currency_pair.second_currency_name,
-                                                                                     get_stationarity_state(
-                                                                                         is_resid_stationarity)))
+        Logger.log_info(log_path,
+                        "Ряд остатков валютных пар {0} и {1} является {2}".format(currency_pair.first_currency_name,
+                                                                                  currency_pair.second_currency_name,
+                                                                                  get_stationarity_state(
+                                                                                  is_resid_stationarity)))
     if is_resid_stationarity:
         b = model.params[0]
 
@@ -60,16 +78,10 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str) -> CurrencyPair:
         currency_pair.z_lower_limit = z_lower_limit
 
         Logger.log_cointegration_info(currency_pair)
-        plt.clf()
-        plt.plot(z, color='black')
-        plt.plot(np.repeat(z_upper_limit, len(z)), 'r--')
-        plt.plot(np.repeat(z_lower_limit, len(z)), 'y--')
-        plt.savefig('{0}/{1}{2}_z_with_limits.png'.format(log_path, currency_pair.first_currency_name,
-                                                          currency_pair.second_currency_name), figsize=(20, 10), dpi=350)
-        plt.close()
+        plot_z_orders_with_limits(z, z_upper_limit, z_lower_limit, log_path, currency_pair)
 
         Logger.log_info(log_path,
-                 'Z = {0}.\n z_upper_limit = {1}.\n z_lower_limit = {2}'.format(z, z_upper_limit, z_lower_limit))
+                        'Z = {0}.\n z_upper_limit = {1}.\n z_lower_limit = {2}'.format(z, z_upper_limit, z_lower_limit))
 
     return currency_pair
 
@@ -93,7 +105,6 @@ def run(currency_pair: CurrencyPair, log_path: str = None) -> CurrencyPair:
     return set_z_score(currency_pair, log_path)
 
     # Алгоритм открытий и закрытий позиций по валютам
-
 
 
 def get_stationarity_state_info(name, is_stationarity=False, ):
