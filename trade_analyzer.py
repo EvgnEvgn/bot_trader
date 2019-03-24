@@ -43,7 +43,7 @@ def set_currency_pair_closes(currency_pair, current_currency_pair_path, interval
              "Кол-во данных по {0}: {1}.".format(currency_pair.second_currency_name, result2_len))
 
     if result1_len == 0 or result2_len == 0:
-        raise TradingAnalyzeException(current_currency_pair_path, "Данных нет.")
+        raise TradingAnalyzeException("Данных нет.", current_currency_pair_path)
 
     diff = result1_len - result2_len
     diff_percent = 0.0
@@ -56,7 +56,7 @@ def set_currency_pair_closes(currency_pair, current_currency_pair_path, interval
         diff_percent = abs(diff) / result2_len
 
     if diff_percent > Config.SERIES_DIFFERENCE_PERCENT_THRESHOLD:
-        raise TradingAnalyzeException(current_currency_pair_path, "Данные по валютам слишком отличаются в размерах.")
+        raise TradingAnalyzeException("Данные по валютам слишком отличаются в размерах.", current_currency_pair_path)
 
     elif is_first_currency_more:
         result1 = result1[abs(diff):]
