@@ -5,6 +5,8 @@ import ArbitrageTradingAlgorithm as ATA
 import os
 import json
 from CurrencyPair import CurrencyPair
+from TradingAnalyzeException import TradingAnalyzeException
+
 # # Length of series
 # N = 100
 #
@@ -120,8 +122,13 @@ data = {}
 #     json.dump(data, json_file)
 
 #with open('data.json', 'w') as json_file:
+try:
+    currency_pair = CurrencyPair()
+    currency_pair.first_currency_name = 'kek'
+    print(currency_pair.first_currency_name)
+    print(currency_pair.second_currency_name)
+    raise TradingAnalyzeException("тут шо-то происходит", "path")
 
-currency_pair = CurrencyPair()
-currency_pair.first_currency_name = 'kek'
-print(currency_pair.first_currency_name)
-print(currency_pair.second_currency_name)
+except TradingAnalyzeException as ex:
+    print(ex.message)
+    print(ex.log_path)
