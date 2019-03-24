@@ -97,6 +97,8 @@ def calculate_cointegration_for_currency_pair(interval, s_date, e_date, currency
 
     except TradingAnalyzeException as ex:
         log_info(ex.log_path, ex.message)
+    finally:
+        return currency_pair
 
 
 def get_grouped_tickers(tickers, major_currencies):
