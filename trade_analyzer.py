@@ -8,6 +8,21 @@ from config import Config, BinanceConfig
 import os
 from TradingAnalyzeException import TradingAnalyzeException
 from logger import Logger
+import dateparser as dp
+
+
+def get_major_currency_path(major_currency):
+
+    start_date = dp.parse(BinanceConfig.TICKERS_GETTER_START_DATE).strftime("%d-%m-%Y")
+
+    end_date = dp.parse(BinanceConfig.TICKERS_GETTER_END_DATE).strftime("%d-%m-%Y")
+    major_currency_path = '{0}_{1}_{2}_{3}'.format(major_currency,
+                                                   BinanceConfig.TICKERS_GETTER_INTERVAL,
+                                                   start_date,
+                                                   end_date)
+
+    return major_currency_path
+
 
 def set_currency_pair_closes(currency_pair, current_currency_pair_path, interval, s_date, e_date, client)-> CurrencyPair:
 
@@ -125,7 +140,8 @@ def run():
     end_date = BinanceConfig.TICKERS_GETTER_END_DATE
 
     for major_currency, gp in grouped_tickers.items():
-        major_currency_path = '{0}/{1}'.format(Config.LOGGING_PATH, major_currency)
+
+        major_currency_path = get_major_currency_path(major_currency)
         print("Мажорная валюта: {0}.".format(major_currency))
 
         if not os.path.isdir(major_currency_path):
