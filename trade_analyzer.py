@@ -43,7 +43,8 @@ def set_currency_pair_closes(currency_pair, current_currency_pair_path, interval
              "Кол-во данных по {0}: {1}.".format(currency_pair.second_currency_name, result2_len))
 
     if result1_len == 0 or result2_len == 0:
-        raise TradingAnalyzeException("Данных нет.", current_currency_pair_path)
+        raise TradingAnalyzeException("Данных нет.", current_currency_pair_path,
+                                      is_first_currency_closes_empty=result1_len == 0)
 
     diff = result1_len - result2_len
     diff_percent = 0.0
@@ -97,6 +98,8 @@ def calculate_cointegration_for_currency_pair(interval, s_date, e_date, currency
 
     except TradingAnalyzeException as ex:
         log_info(ex.log_path, ex.message)
+        currency_pair.is_first_currency_closes_empty = ex.is_first_currency_closes_empty
+
     except Exception as ex:
         print(ex)
     finally:
@@ -154,6 +157,9 @@ def run():
                                                                                                end_date, currency_pair,
                                                                                                major_currency_path,
                                                                                                client)
+                if result_cointegration_currency_pair.is_first_currency_closes_empty:
+                    break
+
                 # Установим вычеслим объем торгов если пары коинтегрированны
                 if result_cointegration_currency_pair.is_stationarity:
                     # TODO понять разницу между quoteVolume и просто volume

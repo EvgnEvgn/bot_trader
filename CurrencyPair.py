@@ -12,6 +12,7 @@ class CurrencyPair:
         self.is_stationarity = False
         self.first_currency_volume = 0
         self.second_currency_volume = 0
+        self.is_first_currency_closes_empty = False
 
     def set_first_currency_volume(self, volume):
         self.first_currency_volume = float(volume)

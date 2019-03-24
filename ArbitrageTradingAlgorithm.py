@@ -30,13 +30,14 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str) -> CurrencyPair:
     currency_pair.is_stationarity = is_resid_stationarity
 
     if log_path is not None:
+        plt.clf()
         plt.plot(resid, color='blue')
         plt.title("Residuals of pairs: {0} and {1}".format(currency_pair.first_currency_name,
                                                            currency_pair.second_currency_name))
 
         plt.savefig('{0}/{1}{2}_residuals.png'.format(log_path, currency_pair.first_currency_name,
-                                                      currency_pair.second_currency_name))
-        plt.clf()
+                                                      currency_pair.second_currency_name), figsize=(17, 10), dpi=350)
+        plt.close()
         log_info(log_path, "Ряд остатков валютных пар {0} и {1} является {2}".format(currency_pair.first_currency_name,
                                                                                      currency_pair.second_currency_name,
                                                                                      get_stationarity_state(
@@ -61,12 +62,13 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str) -> CurrencyPair:
         currency_pair.z_lower_limit = z_lower_limit
 
         log_cointegration_info(currency_pair)
+        plt.clf()
         plt.plot(z, color='black')
         plt.plot(np.repeat(z_upper_limit, len(z)), 'r--')
         plt.plot(np.repeat(z_lower_limit, len(z)), 'y--')
         plt.savefig('{0}/{1}{2}_z_with_limits.png'.format(log_path, currency_pair.first_currency_name,
-                                                          currency_pair.second_currency_name))
-        plt.clf()
+                                                          currency_pair.second_currency_name), figsize=(20, 10), dpi=350)
+        plt.close()
 
         log_info(log_path,
                  'Z = {0}.\n z_upper_limit = {1}.\n z_lower_limit = {2}'.format(z, z_upper_limit, z_lower_limit))
