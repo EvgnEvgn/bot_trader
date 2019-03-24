@@ -7,18 +7,7 @@ from CurrencyPair import CurrencyPair
 from config import Config, BinanceConfig
 import os
 from TradingAnalyzeException import TradingAnalyzeException
-
-
-def write_to_file(path, data, filename='log.txt'):
-    file = open('{0}/{1}'.format(path, filename), 'a+')
-    file.write(data + '\n')
-    file.close()
-
-
-def log_info(path, data):
-    write_to_file(path, data)
-    print(data)
-
+from logger import Logger
 
 def set_currency_pair_closes(currency_pair, current_currency_pair_path, interval, s_date, e_date, client)-> CurrencyPair:
 
@@ -27,19 +16,19 @@ def set_currency_pair_closes(currency_pair, current_currency_pair_path, interval
 
     first_currency_closes = []
     second_currency_closes = []
-    log_info(current_currency_pair_path,
+    Logger.log_info(current_currency_pair_path,
              "Получаем с бинанса данные о свечах пар {0} и {1}...".format(currency_pair.first_currency_name,
                                                                           currency_pair.second_currency_name))
     result1 = client.get_historical_klines(currency_pair.first_currency_name, interval, s_date, e_date)
     result2 = client.get_historical_klines(currency_pair.second_currency_name, interval, s_date, e_date)
 
-    log_info(current_currency_pair_path, "Данные пришли.")
+    Logger.log_info(current_currency_pair_path, "Данные пришли.")
     result1_len = len(result1)
     result2_len = len(result2)
 
-    log_info(current_currency_pair_path,
+    Logger.log_info(current_currency_pair_path,
              "Кол-во данных по {0}: {1}.".format(currency_pair.first_currency_name, result1_len))
-    log_info(current_currency_pair_path,
+    Logger.log_info(current_currency_pair_path,
              "Кол-во данных по {0}: {1}.".format(currency_pair.second_currency_name, result2_len))
 
     if result1_len == 0 or result2_len == 0:
@@ -97,7 +86,7 @@ def calculate_cointegration_for_currency_pair(interval, s_date, e_date, currency
         return ATA.run(currency_pair, current_currency_pair_path)
 
     except TradingAnalyzeException as ex:
-        log_info(ex.log_path, ex.message)
+        Logger.log_info(ex.log_path, ex.message)
         currency_pair.is_first_currency_closes_empty = ex.is_first_currency_closes_empty
 
     except Exception as ex:

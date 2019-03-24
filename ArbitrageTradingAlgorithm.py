@@ -2,11 +2,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import statsmodels.api as sm
 from statsmodels.tsa.stattools import coint, adfuller
-import os
-from config import Config
-import json
+
+from logger import Logger
 from CurrencyPair import CurrencyPair
-from os import path as os_path
 
 
 def check_for_stationarity(X, cutoff=0.01):
@@ -38,7 +36,7 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str) -> CurrencyPair:
         plt.savefig('{0}/{1}{2}_residuals.png'.format(log_path, currency_pair.first_currency_name,
                                                       currency_pair.second_currency_name), figsize=(17, 10), dpi=350)
         plt.close()
-        log_info(log_path, "Ряд остатков валютных пар {0} и {1} является {2}".format(currency_pair.first_currency_name,
+        Logger.log_info(log_path, "Ряд остатков валютных пар {0} и {1} является {2}".format(currency_pair.first_currency_name,
                                                                                      currency_pair.second_currency_name,
                                                                                      get_stationarity_state(
                                                                                          is_resid_stationarity)))
@@ -61,7 +59,7 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str) -> CurrencyPair:
         currency_pair.z_upper_limit = z_upper_limit
         currency_pair.z_lower_limit = z_lower_limit
 
-        log_cointegration_info(currency_pair)
+        Logger.log_cointegration_info(currency_pair)
         plt.clf()
         plt.plot(z, color='black')
         plt.plot(np.repeat(z_upper_limit, len(z)), 'r--')
@@ -70,7 +68,7 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str) -> CurrencyPair:
                                                           currency_pair.second_currency_name), figsize=(20, 10), dpi=350)
         plt.close()
 
-        log_info(log_path,
+        Logger.log_info(log_path,
                  'Z = {0}.\n z_upper_limit = {1}.\n z_lower_limit = {2}'.format(z, z_upper_limit, z_lower_limit))
 
     return currency_pair
@@ -84,9 +82,9 @@ def run(currency_pair: CurrencyPair, log_path: str = None) -> CurrencyPair:
     is_stationarity_second_currency = check_for_stationarity(currency_pair.second_currency_closes)
 
     if log_path is not None:
-        log_info(log_path,
+        Logger.log_info(log_path,
                  get_stationarity_state_info(currency_pair.first_currency_name, is_stationarity_first_currency))
-        log_info(log_path,
+        Logger.log_info(log_path,
                  get_stationarity_state_info(currency_pair.second_currency_name, is_stationarity_second_currency))
 
     if is_stationarity_first_currency or is_stationarity_second_currency:
@@ -96,11 +94,6 @@ def run(currency_pair: CurrencyPair, log_path: str = None) -> CurrencyPair:
 
     # Алгоритм открытий и закрытий позиций по валютам
 
-
-def write_to_file(path, data, filename='log.txt'):
-    file = open(os_path.join(path, filename), 'a+')
-    file.write(data + '\n')
-    file.close()
 
 
 def get_stationarity_state_info(name, is_stationarity=False, ):
@@ -114,36 +107,3 @@ def get_stationarity_state(is_stationarity=False):
 
     return stationarity_in_string if is_stationarity else non_stationarity_in_string
 
-
-def log_info(path, data):
-    write_to_file(path, data)
-    print(data)
-
-
-def log_cointegration_info(currency_pair):
-    if not os.path.isdir(Config.COINTEGRATION_LOG_PATH):
-        os.mkdir(Config.COINTEGRATION_LOG_PATH)
-
-    data = 'Найдена коинтеграция в паре {0}-{1}. Ряд остатков стационарен!'.format(currency_pair.first_currency_name,
-                                                                                   currency_pair.second_currency_name)
-
-    write_to_file(Config.COINTEGRATION_LOG_PATH, data, Config.COINTEGRATION_INFO_TXT_FILENAME)
-
-    with open(os_path.join(Config.COINTEGRATION_LOG_PATH, Config.COINTERGRATION_INFO_JSON_FILENAME), 'r+') as json_file:
-        json_data = json.load(json_file)
-        if 'cointegrated_pairs' not in json_data:
-            json_data['cointegrated_pairs'] = []
-
-        pair_in_str = '{0}_{1}'.format(currency_pair.first_currency_name, currency_pair.second_currency_name)
-        cointegrated_pair_info = {
-            pair_in_str: {
-                '{0}_closes_amount'.format(currency_pair.first_currency_name): len(currency_pair.first_currency_closes),
-                '{0}_closes_amount'.format(currency_pair.second_currency_name): len(
-                    currency_pair.second_currency_closes)
-            }
-        }
-        json_data['cointegrated_pairs'].append(cointegrated_pair_info)
-
-        # устанавливаем на начало, перезаписывая весь файл
-        json_file.seek(0)
-        json.dump(json_data, json_file, ensure_ascii=False)
