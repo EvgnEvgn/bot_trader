@@ -73,7 +73,7 @@ def set_currency_pair_closes(currency_pair, current_currency_pair_path, interval
         first_currency_closes.append(first_currency_candle.close)
         second_currency_closes.append(second_currency_candle.close)
 
-    currency_pair.first_currency_name = pd.Series(first_currency_closes)
+    currency_pair.first_currency_closes = pd.Series(first_currency_closes)
     currency_pair.second_currency_closes = pd.Series(second_currency_closes)
 
     return currency_pair
