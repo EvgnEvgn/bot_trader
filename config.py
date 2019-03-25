@@ -7,7 +7,6 @@ class Config:
     SERIES_DIFFERENCE_PERCENT_THRESHOLD = 0.2
 
 
-
 class BinanceConfig(Config):
 
     API_KEY = 'F95r3yBjC0q5vblzgqo8WUqwOsfqNBNbSoHTRg23bjPmoReKLBsMjId4C5s0dgHT'

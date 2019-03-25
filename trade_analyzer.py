@@ -152,28 +152,30 @@ def run():
         for i in range(0, current_tickers_len - 1):
             first_currency = current_grouped_tickers.pop()
 
-            for second_currency in current_grouped_tickers:
-                currency_pair = CurrencyPair()
-                currency_pair.first_currency_name = first_currency
-                currency_pair.second_currency_name = second_currency
-                # TODO если по first_currency данные не приходят, сделать break
-                result_cointegration_currency_pair = calculate_cointegration_for_currency_pair(interval, start_date,
-                                                                                               end_date, currency_pair,
-                                                                                               major_currency_path,
-                                                                                               client)
-                if result_cointegration_currency_pair.is_first_currency_closes_empty:
-                    break
+            if len(current_grouped_tickers) != 0:
+                for second_currency in current_grouped_tickers:
+                    currency_pair = CurrencyPair()
+                    currency_pair.first_currency_name = first_currency
+                    currency_pair.second_currency_name = second_currency
+                    # TODO если по first_currency данные не приходят, сделать break
+                    result_cointegration_currency_pair = calculate_cointegration_for_currency_pair(interval, start_date,
+                                                                                                   end_date,
+                                                                                                   currency_pair,
+                                                                                                   major_currency_path,
+                                                                                                   client)
+                    if result_cointegration_currency_pair.is_first_currency_closes_empty:
+                        break
 
-                # Установим вычеслим объем торгов если пары коинтегрированны
-                if result_cointegration_currency_pair.is_stationarity:
-                    # TODO понять разницу между quoteVolume и просто volume
-                    result_cointegration_currency_pair.set_first_currency_volume(
-                        client.get_ticker(symbol=result_cointegration_currency_pair.first_currency_name)
-                            .get('quoteVolume'))
-                    result_cointegration_currency_pair.set_second_currency_volume(
-                        client.get_ticker(symbol=result_cointegration_currency_pair.second_currency_name)
-                            .get('quoteVolume'))
-                    Logger.log_cointegration_info(result_cointegration_currency_pair)
+                    # Установим вычеслим объем торгов если пары коинтегрированны
+                    if result_cointegration_currency_pair.is_stationarity:
+                        # TODO понять разницу между quoteVolume и просто volume
+                        result_cointegration_currency_pair.set_first_currency_volume(
+                            client.get_ticker(symbol=result_cointegration_currency_pair.first_currency_name)
+                                .get('quoteVolume'))
+                        result_cointegration_currency_pair.set_second_currency_volume(
+                            client.get_ticker(symbol=result_cointegration_currency_pair.second_currency_name)
+                                .get('quoteVolume'))
+                        Logger.log_cointegration_info(result_cointegration_currency_pair)
 
 
 run()
