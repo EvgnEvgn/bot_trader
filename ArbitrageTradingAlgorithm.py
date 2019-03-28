@@ -39,7 +39,7 @@ def plot_z_orders_with_limits(z_orders, z_upper_limit, z_lower_limit, log_path, 
     plt.close()
 
 
-def set_z_score(currency_pair: CurrencyPair, log_path: str) -> CurrencyPair:
+def set_z_score(currency_pair: CurrencyPair, log_path: str=None) -> CurrencyPair:
     x = sm.add_constant(currency_pair.first_currency_closes)
     y = currency_pair.second_currency_closes
     model = sm.OLS(y, x).fit()
@@ -77,8 +77,8 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str) -> CurrencyPair:
         currency_pair.z_upper_limit = z_upper_limit
         currency_pair.z_lower_limit = z_lower_limit
 
-        Logger.log_cointegration_info(currency_pair)
-        plot_z_orders_with_limits(z, z_upper_limit, z_lower_limit, log_path, currency_pair)
+        # Logger.log_cointegration_info(currency_pair)
+        # plot_z_orders_with_limits(z, z_upper_limit, z_lower_limit, log_path, currency_pair)
 
         Logger.log_info(log_path,
                         'Z = {0}.\n z_upper_limit = {1}.\n z_lower_limit = {2}'.format(z, z_upper_limit, z_lower_limit))

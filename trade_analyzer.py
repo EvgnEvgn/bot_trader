@@ -12,20 +12,20 @@ import dateparser as dp
 
 
 def get_major_currency_path(major_currency):
-    start_date = dp.parse(BinanceConfig.TICKERS_GETTER_START_DATE).strftime("%d-%m-%Y")
+    start_date = dp.parse(BinanceConfig.TICKERS_GETTER_START_DATE_15M).strftime("%d-%m-%Y")
 
-    end_date = dp.parse(BinanceConfig.TICKERS_GETTER_END_DATE).strftime("%d-%m-%Y")
+    end_date = dp.parse(BinanceConfig.TICKERS_GETTER_END_DATE_15M).strftime("%d-%m-%Y")
     major_currency_path = '{0}/{1}_{2}_{3}_{4}'.format(Config.LOGGING_PATH,
                                                        major_currency,
-                                                       BinanceConfig.TICKERS_GETTER_INTERVAL,
+                                                       BinanceConfig.TICKERS_GETTER_INTERVAL_15M,
                                                        start_date,
                                                        end_date)
 
     return major_currency_path
 
 
-def set_currency_pair_closes(currency_pair, current_currency_pair_path, interval, s_date, e_date,
-                             client) -> CurrencyPair:
+def set_currency_pair_closes(currency_pair, interval, s_date, e_date,
+                             client, current_currency_pair_path=None) -> CurrencyPair:
     first_currency_candles = []
     second_currency_candles = []
 
@@ -95,8 +95,8 @@ def calculate_cointegration_for_currency_pair(interval, s_date, e_date, currency
         else:
             return currency_pair
 
-        currency_pair = set_currency_pair_closes(currency_pair, current_currency_pair_path,
-                                                 interval, s_date, e_date, client)
+        currency_pair = set_currency_pair_closes(currency_pair,
+                                                 interval, s_date, e_date, client, current_currency_pair_path)
 
         return ATA.run(currency_pair, current_currency_pair_path)
 
@@ -134,9 +134,9 @@ def run():
 
     grouped_tickers = get_grouped_tickers(tickers, major_currencies)
 
-    interval = BinanceConfig.TICKERS_GETTER_INTERVAL
-    start_date = BinanceConfig.TICKERS_GETTER_START_DATE
-    end_date = BinanceConfig.TICKERS_GETTER_END_DATE
+    interval = BinanceConfig.TICKERS_GETTER_INTERVAL_15M
+    start_date = BinanceConfig.TICKERS_GETTER_START_DATE_15M
+    end_date = BinanceConfig.TICKERS_GETTER_END_DATE_15M
 
     for major_currency, gp in grouped_tickers.items():
 
@@ -178,4 +178,4 @@ def run():
                         Logger.log_cointegration_info(result_cointegration_currency_pair)
 
 
-run()
+#run()

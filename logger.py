@@ -8,7 +8,8 @@ from CurrencyPair import CurrencyPair
 class Logger:
     @staticmethod
     def log_info(path, data):
-        write_to_file(path, data)
+        if path is not None:
+            write_to_file(path, data)
         print(data)
 
     @staticmethod
