@@ -157,7 +157,7 @@ def run():
                     currency_pair = CurrencyPair()
                     currency_pair.first_currency_name = first_currency
                     currency_pair.second_currency_name = second_currency
-                    # TODO если по first_currency данные не приходят, сделать break
+
                     result_cointegration_currency_pair = calculate_cointegration_for_currency_pair(interval, start_date,
                                                                                                    end_date,
                                                                                                    currency_pair,
