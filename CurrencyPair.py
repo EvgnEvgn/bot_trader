@@ -1,11 +1,16 @@
 import sys
 
+
 class CurrencyPair:
     def __init__(self):
         self.first_currency_name = ''
         self.second_currency_name = ''
         self.first_currency_closes = []
         self.second_currency_closes = []
+        self.first_currency_market_purchase_price = 0,
+        self.first_currency_market_sell_price = 0,
+        self.second_currency_market_purchase_price = 0,
+        self.second_currency_market_purchase_price = 0,
         self.z = []
         self.z_upper_limit = sys.float_info.min
         self.z_lower_limit = sys.float_info.min
@@ -13,6 +18,9 @@ class CurrencyPair:
         self.first_currency_volume = 0
         self.second_currency_volume = 0
         self.is_first_currency_closes_empty = False
+        self.major_currency_name = ''
+        self.major_currency_market_purchase_price = 0
+        self.major_currency_market_sell_price = 0
 
     def set_first_currency_volume(self, volume):
         self.first_currency_volume = float(volume)
