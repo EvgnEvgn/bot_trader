@@ -63,14 +63,15 @@ class TradeManagerStub:
                            commission, trade_state: TradeState):
 
         if trade_state.trade_state_position == TradeStatePosition.CLOSED:
-            purchase_result = self.purchase(currency_pair.first_currency_name,
+            purchase_result = self.purchase(currency_pair.second_currency_name,
                                             currency_pair.major_currency_name, count_purchase,
-                                            currency_pair.first_currency_market_purchase_price,
+                                            currency_pair.second_currency_market_purchase_price,
                                             commission, trade_state)
 
-            sell_result = self.sell(currency_pair.second_currency_name,
-                                    currency_pair.major_currency_name, count_sell,
-                                    currency_pair.second_currency_market_sell_price, commission, trade_state)
+            sell_result = self.sell(currency_pair.major_currency_name,
+                                    currency_pair.first_currency_name,
+                                    count_sell,
+                                    currency_pair.first_currency_market_sell_price, commission, trade_state)
             if purchase_result and sell_result:
                 trade_state.trade_state_position = TradeStatePosition.HIGH_OPENED
 
@@ -79,14 +80,14 @@ class TradeManagerStub:
                           commission, trade_state: TradeState):
 
         if trade_state.trade_state_position == TradeStatePosition.CLOSED:
-            purchase_result = self.purchase(currency_pair.second_currency_name,
+            purchase_result = self.purchase(currency_pair.first_currency_name,
                                             currency_pair.major_currency_name, count_purchase,
-                                            currency_pair.second_currency_market_purchase_price,
+                                            currency_pair.first_currency_market_purchase_price,
                                             commission, trade_state)
 
-            sell_result = self.sell(currency_pair.first_currency_name,
-                                    currency_pair.major_currency_name, count_sell,
-                                    currency_pair.first_currency_market_sell_price,
+            sell_result = self.sell(currency_pair.major_currency_name,
+                                    currency_pair.second_currency_name, count_sell,
+                                    currency_pair.second_currency_market_sell_price,
                                     commission, trade_state)
 
             if purchase_result and sell_result:
@@ -102,14 +103,14 @@ class TradeManagerStub:
         sell_info_purchase_currency = trade_state.purchase_info.sell_currency
         sell_info_sell_currency = trade_state.purchase_info.purchase_currency
         sell_info_count = trade_state.purchase_info.count
-        sell_info_price = currency_pair.get_sell_price_by_currency_name(sell_info_purchase_currency)
+        sell_info_price = currency_pair.get_sell_price_by_currency_name(sell_info_sell_currency)
         if sell_info_price == 0:
             return print('Цена не моэет быть равна 0!!!')
 
         purchase_info_purchase_currency = trade_state.sell_info.sell_currency
         purchase_info_sell_currency = trade_state.sell_info.purchase_currency
-        purchase_info_count = trade_state.sell_info.total_price
-        purchase_info_price = currency_pair.get_purchase_price_by_currency_name(purchase_info_sell_currency)
+        purchase_info_count = trade_state.sell_info.count
+        purchase_info_price = currency_pair.get_purchase_price_by_currency_name(purchase_info_purchase_currency)
         if purchase_info_price == 0:
             return print('Цена не моэет быть равна 0!!!')
 

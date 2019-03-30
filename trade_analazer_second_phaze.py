@@ -9,16 +9,14 @@ import dateparser as dp
 from ArbitrageTradingAlgorithm import set_z_score
 import datetime
 import matplotlib.pyplot as plt
-import numpy as np
 from trade_state import TradeState
 from trade_state_position import TradeStatePosition
 from trade_stub_manager import TradeManagerStub
 from wallet import Wallet
-import math
 import schedule
 import time
 import random
-from enum import Enum
+from logger import Logger
 
 
 def get_major_currency(pairs_value):
@@ -140,7 +138,7 @@ trade_manager_stub = TradeManagerStub(init_wallet())
 
 trade_state = TradeState()
 
-zzzz_array = np.array([0, 0.7, 1.1, 0, 0.7, 1.2, 0, -0.6, -1.1, 0])
+z_array = [0, 0.7, 1.1, 0, 0.7, 1.2, 0, -0.6, -1.1, 0]
 
 
 def job():
@@ -161,32 +159,49 @@ def job():
 
     z = result_currency_pair.z
 
-    # last_z_value = z[len(z) - 1]
+    last_z_value = z[len(z) - 1]
 
-    last_z_value = -1.1 #random.uniform(-1.5, 1.5)
-    print('_____Z: ' + str(last_z_value))
+    # last_z_value = z_array[random.randint(0, len(z_array)-1)]
+    # print('_____Z: ' + str(last_z_value))
+    Logger.log_info('C:/ArbitrageTrading/log_check_strategy', '_____Z: ' + str(last_z_value))
 
     # TODO учесть цену если колво валюты меньше чем послдние значение в стакане
     tiker_info = client.get_ticker(symbol=currency_pair.first_currency_name)
     currency_pair.first_currency_market_sell_price = float(tiker_info.get('askPrice'))
     currency_pair.first_currency_market_purchase_price = float(tiker_info.get('bidPrice'))
-    print(
-        'Name: ' + currency_pair.first_currency_name +
-        '\npurchase_price: ' + str(currency_pair.first_currency_market_purchase_price),
-        '\nsell_price: ' + str(currency_pair.first_currency_market_sell_price))
+
+    Logger.log_info('C:/ArbitrageTrading/log_check_strategy',
+                    'Name: ' + currency_pair.first_currency_name +
+                    '; purchase_price: ' + str(currency_pair.first_currency_market_purchase_price) +
+                    '; sell_price: ' + str(currency_pair.first_currency_market_sell_price))
+    # print(
+    #     'Name: ' + currency_pair.first_currency_name +
+    #     '\npurchase_price: ' + str(currency_pair.first_currency_market_purchase_price)+
+    #     '\nsell_price: ' + str(currency_pair.first_currency_market_sell_price))
 
     tiker_info = client.get_ticker(symbol=currency_pair.second_currency_name)
     currency_pair.second_currency_market_sell_price = float(tiker_info.get('askPrice'))
     currency_pair.second_currency_market_purchase_price = float(tiker_info.get('bidPrice'))
-    print(
-        'Name: ' + currency_pair.second_currency_name +
-        '\npurchase_price: ' + str(currency_pair.second_currency_market_purchase_price),
-        '\nsell_price: ' + str(currency_pair.second_currency_market_sell_price))
+
+    Logger.log_info('C:/ArbitrageTrading/log_check_strategy',
+                    'Name: ' + currency_pair.second_currency_name +
+                    '; purchase_price: ' + str(currency_pair.second_currency_market_purchase_price) +
+                    '; sell_price: ' + str(currency_pair.second_currency_market_sell_price))
+
+    # print(
+    #     'Name: ' + currency_pair.second_currency_name +
+    #     '\npurchase_price: ' + str(currency_pair.second_currency_market_purchase_price) +
+    #     '\nsell_price: ' + str(currency_pair.second_currency_market_sell_price))
 
     currency_pair.first_currency_name = currency_pair.first_currency_name \
         .replace(currency_pair.major_currency_name, '')
     currency_pair.second_currency_name = currency_pair.second_currency_name \
         .replace(currency_pair.major_currency_name, '')
+
+    # # TODO убрать
+    # result_currency_pair = currency_pair
+    # result_currency_pair.z_upper_limit = 1
+    # result_currency_pair.z_lower_limit = -1
 
     if trade_state.trade_state_position == TradeStatePosition.CLOSED:
         if last_z_value > result_currency_pair.z_upper_limit:
@@ -197,8 +212,9 @@ def job():
         if abs(last_z_value) < 0.05:
             trade_manager_stub.close_position(currency_pair, trade_state)
 
-    print('Wallet: ')
-    print(trade_manager_stub.wallet.currency_accounts)
+    Logger.log_info('C:/ArbitrageTrading/log_check_strategy', str(trade_manager_stub.wallet.currency_accounts) + '\n')
+    # print('Wallet: ')
+    # print(trade_manager_stub.wallet.currency_accounts)
 
     # plt.plot(z, color='black')
     # plt.plot(np.repeat(result_currency_pair.z_upper_limit, len(z)), 'r--')
@@ -206,7 +222,7 @@ def job():
     # plt.show()
 
 
-schedule.every(15).seconds.do(job)
+schedule.every(60).seconds.do(job)
 
 while True:
     schedule.run_pending()
