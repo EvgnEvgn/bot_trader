@@ -1,22 +1,8 @@
 from wallet import Wallet
 from CurrencyPair import CurrencyPair
-from trade_state import TradeStatePosition
+from trade_state_position import TradeStatePosition
 from config import BinanceConfig
-
-
-class TradeInfo:
-    def __init__(self):
-        self.purchase_currency = ''
-        self.sell_currency = ''
-        self.count = 0.0
-        self.total_price = 0.0
-
-
-class TradeState:
-    def __init__(self, purchase_info: TradeInfo, sell_info: TradeInfo):
-        self.purchase_info = purchase_info
-        self.sell_info = sell_info
-        self.trade_state_position = TradeStatePosition.CLOSED
+from trade_state import TradeState
 
 
 class TradeManagerStub:
@@ -34,7 +20,7 @@ class TradeManagerStub:
 
         total_purchase_currency_count = price_bid * count
 
-        if sell_currency < total_purchase_currency_count:
+        if sell_currency_amount < total_purchase_currency_count:
             print('Недосточно средств')
             return False
 
@@ -59,7 +45,7 @@ class TradeManagerStub:
 
         total_sell_price = price_ask * count * (1 - commission)
 
-        if sell_currency < count:
+        if sell_currency_amount < count:
             print('Недосточно средств')
             return False
 
@@ -74,29 +60,34 @@ class TradeManagerStub:
 
     def open_high_position(self, currency_pair: CurrencyPair,
                            count_purchase: float, count_sell: float,
-                           price_purchase: float, price_sell: float, commission, trade_state: TradeState):
+                           commission, trade_state: TradeState):
 
         if trade_state.trade_state_position == TradeStatePosition.CLOSED:
             purchase_result = self.purchase(currency_pair.first_currency_name,
-                                            currency_pair.major_currency_name, count_purchase, price_purchase,
+                                            currency_pair.major_currency_name, count_purchase,
+                                            currency_pair.first_currency_market_purchase_price,
                                             commission, trade_state)
 
             sell_result = self.sell(currency_pair.second_currency_name,
-                                    currency_pair.major_currency_name, count_sell, price_sell, commission, trade_state)
+                                    currency_pair.major_currency_name, count_sell,
+                                    currency_pair.second_currency_market_sell_price, commission, trade_state)
             if purchase_result and sell_result:
                 trade_state.trade_state_position = TradeStatePosition.HIGH_OPENED
 
     def open_low_position(self, currency_pair: CurrencyPair,
                           count_purchase: float, count_sell: float,
-                          price_purchase: float, price_sell: float, commission, trade_state: TradeState):
+                          commission, trade_state: TradeState):
 
         if trade_state.trade_state_position == TradeStatePosition.CLOSED:
             purchase_result = self.purchase(currency_pair.second_currency_name,
-                                            currency_pair.major_currency_name, count_purchase, price_purchase,
+                                            currency_pair.major_currency_name, count_purchase,
+                                            currency_pair.second_currency_market_purchase_price,
                                             commission, trade_state)
 
             sell_result = self.sell(currency_pair.first_currency_name,
-                                    currency_pair.major_currency_name, count_sell, price_sell, commission, trade_state)
+                                    currency_pair.major_currency_name, count_sell,
+                                    currency_pair.first_currency_market_sell_price,
+                                    commission, trade_state)
 
             if purchase_result and sell_result:
                 trade_state.trade_state_position = TradeStatePosition.LOW_OPENED
@@ -111,14 +102,14 @@ class TradeManagerStub:
         sell_info_purchase_currency = trade_state.purchase_info.sell_currency
         sell_info_sell_currency = trade_state.purchase_info.purchase_currency
         sell_info_count = trade_state.purchase_info.count
-        sell_info_price = currency_pair.get_sell_price_by_currency_name(sell_info_sell_currency)
+        sell_info_price = currency_pair.get_sell_price_by_currency_name(sell_info_purchase_currency)
         if sell_info_price == 0:
             return print('Цена не моэет быть равна 0!!!')
 
         purchase_info_purchase_currency = trade_state.sell_info.sell_currency
         purchase_info_sell_currency = trade_state.sell_info.purchase_currency
         purchase_info_count = trade_state.sell_info.total_price
-        purchase_info_price = currency_pair.get_purchase_price_by_currency_name(purchase_info_purchase_currency)
+        purchase_info_price = currency_pair.get_purchase_price_by_currency_name(purchase_info_sell_currency)
         if purchase_info_price == 0:
             return print('Цена не моэет быть равна 0!!!')
 

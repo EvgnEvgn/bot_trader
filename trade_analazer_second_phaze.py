@@ -10,8 +10,14 @@ from ArbitrageTradingAlgorithm import set_z_score
 import datetime
 import matplotlib.pyplot as plt
 import numpy as np
+from trade_state import TradeState
+from trade_state_position import TradeStatePosition
+from trade_stub_manager import TradeManagerStub
+from wallet import Wallet
+import math
 import schedule
 import time
+import random
 from enum import Enum
 
 
@@ -77,6 +83,7 @@ def sort_by_five_minutes():
                                                                                        currency_path,
                                                                                        client)
 
+
 # TODO
 # comision = 0.00075
 #
@@ -121,9 +128,26 @@ def sort_by_five_minutes():
 # state = State.NEED_OVER_LINE
 
 
+def init_wallet() -> Wallet:
+    wallet = Wallet()
+    wallet.add_currency_account('RVN', 100)
+    wallet.add_currency_account('XRP', 100)
+    wallet.add_currency_account('BTC', 1)
+    return wallet
+
+
+trade_manager_stub = TradeManagerStub(init_wallet())
+
+trade_state = TradeState()
+
+zzzz_array = np.array([0, 0.7, 1.1, 0, 0.7, 1.2, 0, -0.6, -1.1, 0])
+
+
 def job():
+    major_currency_name = 'BTC'
     mainPairs = 'RVNBTC_XRPBTC'
     currency_pair = CurrencyPair()
+    currency_pair.major_currency_name = major_currency_name
     currency_pair.first_currency_name = get_major_currency(mainPairs)
     currency_pair.second_currency_name = get_minor_currency(mainPairs)
 
@@ -137,12 +161,49 @@ def job():
 
     z = result_currency_pair.z
 
-    print(z[len(z) - 1])
-    plt.clf()
-    plt.plot(z, color='black')
-    plt.plot(np.repeat(result_currency_pair.z_upper_limit, len(z)), 'r--')
-    plt.plot(np.repeat(result_currency_pair.z_lower_limit, len(z)), 'y--')
-    plt.show()
+    # last_z_value = z[len(z) - 1]
+
+    last_z_value = -1.1 #random.uniform(-1.5, 1.5)
+    print('_____Z: ' + str(last_z_value))
+
+    # TODO учесть цену если колво валюты меньше чем послдние значение в стакане
+    tiker_info = client.get_ticker(symbol=currency_pair.first_currency_name)
+    currency_pair.first_currency_market_sell_price = float(tiker_info.get('askPrice'))
+    currency_pair.first_currency_market_purchase_price = float(tiker_info.get('bidPrice'))
+    print(
+        'Name: ' + currency_pair.first_currency_name +
+        '\npurchase_price: ' + str(currency_pair.first_currency_market_purchase_price),
+        '\nsell_price: ' + str(currency_pair.first_currency_market_sell_price))
+
+    tiker_info = client.get_ticker(symbol=currency_pair.second_currency_name)
+    currency_pair.second_currency_market_sell_price = float(tiker_info.get('askPrice'))
+    currency_pair.second_currency_market_purchase_price = float(tiker_info.get('bidPrice'))
+    print(
+        'Name: ' + currency_pair.second_currency_name +
+        '\npurchase_price: ' + str(currency_pair.second_currency_market_purchase_price),
+        '\nsell_price: ' + str(currency_pair.second_currency_market_sell_price))
+
+    currency_pair.first_currency_name = currency_pair.first_currency_name \
+        .replace(currency_pair.major_currency_name, '')
+    currency_pair.second_currency_name = currency_pair.second_currency_name \
+        .replace(currency_pair.major_currency_name, '')
+
+    if trade_state.trade_state_position == TradeStatePosition.CLOSED:
+        if last_z_value > result_currency_pair.z_upper_limit:
+            trade_manager_stub.open_high_position(currency_pair, 10, 10, BinanceConfig.COMMISSION, trade_state)
+        if last_z_value < result_currency_pair.z_lower_limit:
+            trade_manager_stub.open_low_position(currency_pair, 10, 10, BinanceConfig.COMMISSION, trade_state)
+    else:
+        if abs(last_z_value) < 0.05:
+            trade_manager_stub.close_position(currency_pair, trade_state)
+
+    print('Wallet: ')
+    print(trade_manager_stub.wallet.currency_accounts)
+
+    # plt.plot(z, color='black')
+    # plt.plot(np.repeat(result_currency_pair.z_upper_limit, len(z)), 'r--')
+    # plt.plot(np.repeat(result_currency_pair.z_lower_limit, len(z)), 'y--')
+    # plt.show()
 
 
 schedule.every(15).seconds.do(job)
