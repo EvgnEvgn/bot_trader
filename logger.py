@@ -5,6 +5,7 @@ import json
 
 from CurrencyPair import CurrencyPair
 
+
 class Logger:
     @staticmethod
     def log_info(path, data):

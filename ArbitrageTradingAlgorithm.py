@@ -81,12 +81,13 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str=None) -> CurrencyPair
         # plot_z_orders_with_limits(z, z_upper_limit, z_lower_limit, log_path, currency_pair)
 
         Logger.log_info(log_path,
-                        'Z = {0}.\n z_upper_limit = {1}.\n z_lower_limit = {2}'.format(z, z_upper_limit, z_lower_limit))
+                        'z_upper_limit = {0}.\n z_lower_limit = {1}'.format(z_upper_limit, z_lower_limit))
 
     return currency_pair
 
 
 def run(currency_pair: CurrencyPair, log_path: str = None) -> CurrencyPair:
+
     print("Выполняется проверка коинтеграции валютных пар {0} и {1}.".format(currency_pair.first_currency_name,
                                                                              currency_pair.second_currency_name))
 

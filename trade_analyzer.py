@@ -1,6 +1,6 @@
+from BinanceClientSingleton import BinanceClientSingleton as BinanceClient
 from binance.client import Client
 from Candle import Candle
-from binance.websockets import BinanceSocketManager
 import ArbitrageTradingAlgorithm as ATA
 import pandas as pd
 from CurrencyPair import CurrencyPair
@@ -24,8 +24,11 @@ def get_major_currency_path(major_currency):
     return major_currency_path
 
 
-def set_currency_pair_closes(currency_pair, interval, s_date, e_date,
-                             client, current_currency_pair_path=None) -> CurrencyPair:
+def set_currency_pair_info(currency_pair, interval, s_date, e_date,
+                           current_currency_pair_path=None) -> CurrencyPair:
+
+    client = BinanceClient().get_client()
+
     first_currency_candles = []
     second_currency_candles = []
 
@@ -95,8 +98,8 @@ def calculate_cointegration_for_currency_pair(interval, s_date, e_date, currency
         else:
             return currency_pair
 
-        currency_pair = set_currency_pair_closes(currency_pair,
-                                                 interval, s_date, e_date, client, current_currency_pair_path)
+        currency_pair = set_currency_pair_info(currency_pair,
+                                               interval, s_date, e_date, client, current_currency_pair_path)
 
         return ATA.run(currency_pair, current_currency_pair_path)
 
@@ -126,13 +129,12 @@ def get_grouped_tickers(tickers, major_currencies):
 
 
 def run():
-    major_currencies = ['BTC', 'ETH', 'USDT', 'USDC']
 
-    client = Client(BinanceConfig.API_KEY, BinanceConfig.API_SECRET)
+    client = BinanceClient
 
     tickers = client.get_all_tickers()
 
-    grouped_tickers = get_grouped_tickers(tickers, major_currencies)
+    grouped_tickers = get_grouped_tickers(tickers, BinanceConfig.MAJOR_CURRENCIES)
 
     interval = BinanceConfig.TICKERS_GETTER_INTERVAL_15M
     start_date = BinanceConfig.TICKERS_GETTER_START_DATE_15M
@@ -157,6 +159,13 @@ def run():
                     currency_pair = CurrencyPair()
                     currency_pair.first_currency_name = first_currency
                     currency_pair.second_currency_name = second_currency
+
+                    currency_pair = set_currency_pair_info(currency_pair,
+                                                           BinanceConfig.TICKERS_GETTER_INTERVAL_15M,
+                                                           BinanceConfig.TICKERS_GETTER_START_DATE_15M,
+                                                           BinanceConfig.TICKERS_GETTER_END_DATE_15M,
+                                                           major_currency_path)
+
 
                     result_cointegration_currency_pair = calculate_cointegration_for_currency_pair(interval, start_date,
                                                                                                    end_date,

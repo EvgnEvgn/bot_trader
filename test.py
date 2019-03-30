@@ -10,6 +10,6 @@ import ArbitrageTradingAlgorithm as ATA
 from config import BinanceConfig
 import dateparser as dp
 
-x = {1: 2, 3: 4, 4: 3, 2: 1, 0: 0}
-sorted_x = sorted(x.items(), key=lambda kv: print(kv))
-print(sorted_x)
+a = [1]
+if a.empty:
+  print("List is empty")

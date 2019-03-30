@@ -3,7 +3,7 @@ import os
 from os import path as os_path
 from config import Config, BinanceConfig
 from CurrencyPair import CurrencyPair
-from trade_analyzer import calculate_cointegration_for_currency_pair, set_currency_pair_closes
+from trade_analyzer import calculate_cointegration_for_currency_pair, set_currency_pair_info
 from binance.client import Client
 import dateparser as dp
 from ArbitrageTradingAlgorithm import set_z_score
@@ -131,7 +131,7 @@ def job():
     s_date = BinanceConfig.TICKERS_GETTER_START_DATE_5M
     e_date = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
     client = Client(BinanceConfig.API_KEY, BinanceConfig.API_SECRET)
-    currency_pair = set_currency_pair_closes(currency_pair, interval, s_date, e_date, client)
+    currency_pair = set_currency_pair_info(currency_pair, interval, s_date, e_date, client)
 
     result_currency_pair = set_z_score(currency_pair)
 
