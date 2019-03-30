@@ -209,7 +209,8 @@ def job():
         if last_z_value < result_currency_pair.z_lower_limit:
             trade_manager_stub.open_low_position(currency_pair, 10, 10, BinanceConfig.COMMISSION, trade_state)
     else:
-        if abs(last_z_value) < 0.05:
+        if (trade_state.trade_state_position == TradeStatePosition.HIGH_OPENED and last_z_value < 0.03) or (
+                trade_state.trade_state_position == TradeStatePosition.LOW_OPENED and last_z_value > -0.03):
             trade_manager_stub.close_position(currency_pair, trade_state)
 
     Logger.log_info('C:/ArbitrageTrading/log_check_strategy', str(trade_manager_stub.wallet.currency_accounts) + '\n')
