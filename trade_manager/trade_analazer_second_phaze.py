@@ -98,7 +98,7 @@ def init_trade_state() -> TradeState:
 
 trade_manager_stub = TradeManagerStub(init_wallet())
 trade_state = init_trade_state()
-
+path_log_test_info = 'C:/ArbitrageTrading/log_check_strategy'
 
 def job():
     currency_pair = CurrencyPair()
@@ -119,14 +119,14 @@ def job():
 
     # last_z_value = z_array[random.randint(0, len(z_array)-1)]
     # print('_____Z: ' + str(last_z_value))
-    Logger.log_info('C:/ArbitrageTrading/log_check_strategy', '_____Z: ' + str(last_z_value))
+    Logger.log_info(path_log_test_info, '_____Z: ' + str(last_z_value))
 
     # TODO учесть цену если колво валюты меньше чем послдние значение в стакане
     tiker_info = client.get_ticker(symbol=currency_pair.first_currency_name)
     currency_pair.first_currency_market_sell_price = float(tiker_info.get('askPrice'))
     currency_pair.first_currency_market_purchase_price = float(tiker_info.get('bidPrice'))
 
-    Logger.log_info('C:/ArbitrageTrading/log_check_strategy',
+    Logger.log_info(path_log_test_info,
                     'Name: ' + currency_pair.first_currency_name +
                     '; purchase_price: ' + str(currency_pair.first_currency_market_purchase_price) +
                     '; sell_price: ' + str(currency_pair.first_currency_market_sell_price))
@@ -139,7 +139,7 @@ def job():
     currency_pair.second_currency_market_sell_price = float(tiker_info.get('askPrice'))
     currency_pair.second_currency_market_purchase_price = float(tiker_info.get('bidPrice'))
 
-    Logger.log_info('C:/ArbitrageTrading/log_check_strategy',
+    Logger.log_info(path_log_test_info,
                     'Name: ' + currency_pair.second_currency_name +
                     '; purchase_price: ' + str(currency_pair.second_currency_market_purchase_price) +
                     '; sell_price: ' + str(currency_pair.second_currency_market_sell_price))
@@ -172,7 +172,7 @@ def job():
     redis.set(RedisConfig.TRADE_STATE_KEY + mainPairs, pickle.dumps(trade_state))
     redis.set(RedisConfig.TEST_WALLET_KEY + mainPairs, pickle.dumps(trade_manager_stub.wallet))
 
-    Logger.log_info('C:/ArbitrageTrading/log_check_strategy', str(trade_manager_stub.wallet.currency_accounts) + '\n')
+    Logger.log_info(path_log_test_info, str(trade_manager_stub.wallet.currency_accounts) + '\n')
     # print('Wallet: ')
     # print(trade_manager_stub.wallet.currency_accounts)
     # plt.plot(z, color='black')
