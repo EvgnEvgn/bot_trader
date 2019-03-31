@@ -82,7 +82,6 @@ def sort_by_five_minutes():
                                                                                        currency_path,
                                                                                        client)
 
-
 # TODO
 # comision = 0.00075
 #

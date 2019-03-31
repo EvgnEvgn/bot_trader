@@ -26,7 +26,6 @@ def get_major_currency_path(major_currency):
 
 def set_currency_pair_info(currency_pair, interval, s_date, e_date,
                            current_currency_pair_path=None) -> CurrencyPair:
-
     client = BinanceClient().get_client()
 
     first_currency_candles = []
@@ -129,16 +128,11 @@ def get_grouped_tickers(tickers, major_currencies):
 
 
 def run():
-
     client = BinanceClient().get_client()
 
     tickers = client.get_all_tickers()
 
     grouped_tickers = get_grouped_tickers(tickers, BinanceConfig.MAJOR_CURRENCIES)
-
-    interval = BinanceConfig.TICKERS_GETTER_INTERVAL_15M
-    start_date = BinanceConfig.TICKERS_GETTER_START_DATE_15M
-    end_date = BinanceConfig.TICKERS_GETTER_END_DATE_15M
 
     for major_currency, gp in grouped_tickers.items():
 
@@ -166,11 +160,17 @@ def run():
                                                            BinanceConfig.TICKERS_GETTER_END_DATE_15M,
                                                            major_currency_path)
 
-                    result_cointegration_currency_pair = calculate_cointegration_for_currency_pair(interval, start_date,
-                                                                                                   end_date,
-                                                                                                   currency_pair,
-                                                                                                   major_currency_path,
-                                                                                                   client)
+                    current_currency_pair_path = '{0}/{1}_{2}'.format(major_currency_path,
+                                                                      currency_pair.first_currency_name,
+                                                                      currency_pair.second_currency_name)
+
+                    if not os.path.isdir(current_currency_pair_path):
+                        os.mkdir(current_currency_pair_path)
+                    else:
+                        continue
+
+                    result_cointegration_currency_pair = ATA.run(currency_pair, current_currency_pair_path)
+
                     if result_cointegration_currency_pair.is_first_currency_closes_empty:
                         break
 
@@ -185,5 +185,4 @@ def run():
                                 .get('quoteVolume'))
                         Logger.log_cointegration_info(result_cointegration_currency_pair)
 
-
-#run()
+# run()
