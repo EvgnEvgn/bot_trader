@@ -2,21 +2,20 @@ import json
 import os
 from os import path as os_path
 from config import Config, BinanceConfig
-from CurrencyPair import CurrencyPair
-from trade_analyzer import calculate_cointegration_for_currency_pair, set_currency_pair_info
+from objects.CurrencyPair import CurrencyPair
+from cointegration_analyzer.currency_pair_cointegration_analyzer import calculate_cointegration_for_currency_pair, set_currency_pair_info
 from binance.client import Client
 import dateparser as dp
-from ArbitrageTradingAlgorithm import set_z_score
+from trading_algorithms.ArbitrageTradingAlgorithm import set_z_score
 import datetime
 import matplotlib.pyplot as plt
-from trade_state import TradeState
-from trade_state_position import TradeStatePosition
-from trade_stub_manager import TradeManagerStub
-from wallet import Wallet
+from objects.trade_state import TradeState
+from objects.trade_state_position import TradeStatePosition
+from trade_manager.trade_stub_manager import TradeManagerStub
+from objects.wallet import Wallet
 import schedule
 import time
-import random
-from logger import Logger
+from Loggers.logger import Logger
 import numpy as np
 
 

@@ -1,8 +1,8 @@
-from wallet import Wallet
-from CurrencyPair import CurrencyPair
-from trade_state_position import TradeStatePosition
+from objects.wallet import Wallet
+from objects.CurrencyPair import CurrencyPair
+from objects.trade_state_position import TradeStatePosition
 from config import BinanceConfig
-from trade_state import TradeState
+from objects.trade_state import TradeState
 
 
 class TradeManagerStub:

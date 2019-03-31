@@ -1,6 +1,6 @@
 from binance.client import Client
 from config import BinanceConfig
-from Singleton import Singleton
+from objects.Singleton import Singleton
 
 
 class BinanceClientSingleton(metaclass=Singleton):

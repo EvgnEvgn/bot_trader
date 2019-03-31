@@ -1,14 +1,14 @@
-from BinanceClientSingleton import BinanceClientSingleton as BinanceClient
-from binance.client import Client
-from Candle import Candle
-import ArbitrageTradingAlgorithm as ATA
+from objects.BinanceClientSingleton import BinanceClientSingleton as BinanceClient
+from objects.Candle import Candle
+from trading_algorithms import ArbitrageTradingAlgorithm as ATA
 import pandas as pd
-from CurrencyPair import CurrencyPair
+from objects.CurrencyPair import CurrencyPair
 from config import Config, BinanceConfig
 import os
-from TradingAnalyzeException import TradingAnalyzeException
-from logger import Logger
+from exceptions.TradingAnalyzeException import TradingAnalyzeException
+from Loggers.logger import Logger
 import dateparser as dp
+from helpers.helpers import is_file_exists_in_dir
 
 
 def get_major_currency_path(major_currency):
@@ -63,7 +63,8 @@ def set_currency_pair_info(currency_pair, interval, s_date, e_date,
         diff_percent = abs(diff) / result2_len
 
     if diff_percent > Config.SERIES_DIFFERENCE_PERCENT_THRESHOLD:
-        raise TradingAnalyzeException("Данные по валютам слишком отличаются в размерах.", current_currency_pair_path)
+        raise TradingAnalyzeException("Данные по валютам слишком отличаются в размерах.", current_currency_pair_path,
+                                      is_first_currency_closes_small_size=not is_first_currency_more)
 
     elif is_first_currency_more:
         result1 = result1[abs(diff):]
@@ -86,32 +87,6 @@ def set_currency_pair_info(currency_pair, interval, s_date, e_date,
     return currency_pair
 
 
-def calculate_cointegration_for_currency_pair(interval, s_date, e_date, currency_pair, log_path,
-                                              client) -> CurrencyPair:
-    try:
-        current_currency_pair_path = '{0}/{1}_{2}'.format(log_path, currency_pair.first_currency_name,
-                                                          currency_pair.second_currency_name)
-
-        if not os.path.isdir(current_currency_pair_path):
-            os.mkdir(current_currency_pair_path)
-        else:
-            return currency_pair
-
-        currency_pair = set_currency_pair_info(currency_pair,
-                                               interval, s_date, e_date, client, current_currency_pair_path)
-
-        return ATA.run(currency_pair, current_currency_pair_path)
-
-    except TradingAnalyzeException as ex:
-        Logger.log_info(ex.log_path, ex.message)
-        currency_pair.is_first_currency_closes_empty = ex.is_first_currency_closes_empty
-
-    except Exception as ex:
-        print(ex)
-    finally:
-        return currency_pair
-
-
 def get_grouped_tickers(tickers, major_currencies):
     grouped_tickers = {}
 
@@ -125,6 +100,21 @@ def get_grouped_tickers(tickers, major_currencies):
         grouped_tickers.update({major_currency: current_tickers})
 
     return grouped_tickers
+
+
+def set_quote_volume_to_currency_pair(currency_pair: CurrencyPair):
+    # TODO понять разницу между quoteVolume и просто volume
+    client = BinanceClient().get_client()
+
+    quote_volume_result = client.get_ticker(symbol=currency_pair.first_currency_name).get('quoteVolume')
+
+    if quote_volume_result:
+        currency_pair.set_first_currency_volume(quote_volume_result)
+
+    quote_volume_result = client.get_ticker(symbol=currency_pair.second_currency_name).get('quoteVolume')
+
+    if quote_volume_result:
+        currency_pair.set_second_currency_volume(quote_volume_result)
 
 
 def run():
@@ -150,39 +140,44 @@ def run():
 
             if len(current_grouped_tickers) != 0:
                 for second_currency in current_grouped_tickers:
-                    currency_pair = CurrencyPair()
-                    currency_pair.first_currency_name = first_currency
-                    currency_pair.second_currency_name = second_currency
+                    try:
+                        currency_pair = CurrencyPair()
+                        currency_pair.first_currency_name = first_currency
+                        currency_pair.second_currency_name = second_currency
 
-                    currency_pair = set_currency_pair_info(currency_pair,
-                                                           BinanceConfig.TICKERS_GETTER_INTERVAL_15M,
-                                                           BinanceConfig.TICKERS_GETTER_START_DATE_15M,
-                                                           BinanceConfig.TICKERS_GETTER_END_DATE_15M,
-                                                           major_currency_path)
+                        current_currency_pair_path = '{0}/{1}_{2}'.format(major_currency_path,
+                                                                          currency_pair.first_currency_name,
+                                                                          currency_pair.second_currency_name)
 
-                    current_currency_pair_path = '{0}/{1}_{2}'.format(major_currency_path,
-                                                                      currency_pair.first_currency_name,
-                                                                      currency_pair.second_currency_name)
+                        if not os.path.isdir(current_currency_pair_path):
+                            os.mkdir(current_currency_pair_path)
 
-                    if not os.path.isdir(current_currency_pair_path):
-                        os.mkdir(current_currency_pair_path)
-                    else:
-                        continue
+                        else:
+                            if is_file_exists_in_dir(current_currency_pair_path, Config.RESIDUES_RESULT_FILENAME):
+                                continue
 
-                    result_cointegration_currency_pair = ATA.run(currency_pair, current_currency_pair_path)
+                        currency_pair = set_currency_pair_info(currency_pair,
+                                                               BinanceConfig.TICKERS_GETTER_INTERVAL_15M,
+                                                               BinanceConfig.TICKERS_GETTER_START_DATE_15M,
+                                                               BinanceConfig.TICKERS_GETTER_END_DATE_15M,
+                                                               major_currency_path)
 
-                    if result_cointegration_currency_pair.is_first_currency_closes_empty:
-                        break
+                        result_cointegration_currency_pair = ATA.run(currency_pair, current_currency_pair_path)
 
-                    # Установим вычеслим объем торгов если пары коинтегрированны
-                    if result_cointegration_currency_pair.is_stationarity:
-                        # TODO понять разницу между quoteVolume и просто volume
-                        result_cointegration_currency_pair.set_first_currency_volume(
-                            client.get_ticker(symbol=result_cointegration_currency_pair.first_currency_name)
-                                .get('quoteVolume'))
-                        result_cointegration_currency_pair.set_second_currency_volume(
-                            client.get_ticker(symbol=result_cointegration_currency_pair.second_currency_name)
-                                .get('quoteVolume'))
-                        Logger.log_cointegration_info(result_cointegration_currency_pair)
+                        # Установим объем торгов если пары коинтегрированны
+                        if result_cointegration_currency_pair.is_stationarity:
 
-# run()
+                            set_quote_volume_to_currency_pair(result_cointegration_currency_pair)
+
+                            Logger.log_cointegration_info(result_cointegration_currency_pair, major_currency_path)
+
+                    except TradingAnalyzeException as ex:
+                        Logger.log_info(ex.log_path, ex.message)
+                        if ex.is_first_currency_closes_empty or ex.is_first_currency_closes_small_size:
+                            break
+                    except Exception as ex:
+                        print('Неопознанная ошибка! ')
+                        print(ex)
+
+
+run()

@@ -1,10 +1,9 @@
-from BinanceClientSingleton import BinanceClientSingleton as BinanceClient
+from objects.BinanceClientSingleton import BinanceClientSingleton as BinanceClient
 from config import BinanceConfig
-from CurrencyPair import CurrencyPair
-from trade_analyzer import set_currency_pair_info
+from objects.CurrencyPair import CurrencyPair
+from cointegration_analyzer.currency_pair_cointegration_analyzer import set_currency_pair_info
 from scipy.stats.stats import pearsonr
 import numpy
-import math
 
 
 def check_correlation(currency_pair: CurrencyPair):

@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import statsmodels.api as sm
-from statsmodels.tsa.stattools import coint, adfuller
-
-from logger import Logger
-from CurrencyPair import CurrencyPair
+from statsmodels.tsa.stattools import adfuller
+from Loggers.logger import Logger
+from objects.CurrencyPair import CurrencyPair
+from config import Config
 
 
 def check_for_stationarity(X, cutoff=0.01):
@@ -17,19 +17,19 @@ def check_for_stationarity(X, cutoff=0.01):
 
 
 def plot_residuals(plot_path, currency_pair, residuals):
-
     plt.clf()
     plt.plot(residuals, color='blue')
-    plt.title("Residuals of pairs: {0} and {1}".format(currency_pair.first_currency_name,
-                                                       currency_pair.second_currency_name))
+    plt.title("Residues of pairs: {0} and {1}".format(currency_pair.first_currency_name,
+                                                      currency_pair.second_currency_name))
 
-    plt.savefig('{0}/{1}{2}_residuals.png'.format(plot_path, currency_pair.first_currency_name,
-                                                  currency_pair.second_currency_name), figsize=(20, 10), dpi=350)
+    plt.savefig('{0}/{1}{2}_{3}'.format(plot_path,
+                                        currency_pair.first_currency_name,
+                                        currency_pair.second_currency_name,
+                                        Config.RESIDUES_RESULT_FILENAME), figsize=(20, 10), dpi=350)
     plt.close()
 
 
 def plot_z_orders_with_limits(z_orders, z_upper_limit, z_lower_limit, log_path, currency_pair):
-
     plt.clf()
     plt.plot(z_orders, color='black')
     plt.plot(np.repeat(z_upper_limit, len(z_orders)), 'r--')
@@ -39,7 +39,7 @@ def plot_z_orders_with_limits(z_orders, z_upper_limit, z_lower_limit, log_path, 
     plt.close()
 
 
-def set_z_score(currency_pair: CurrencyPair, log_path: str=None) -> CurrencyPair:
+def set_z_score(currency_pair: CurrencyPair, log_path: str = None) -> CurrencyPair:
     x = sm.add_constant(currency_pair.first_currency_closes)
     y = currency_pair.second_currency_closes
     model = sm.OLS(y, x).fit()
@@ -57,7 +57,7 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str=None) -> CurrencyPair
                         "Ряд остатков валютных пар {0} и {1} является {2}".format(currency_pair.first_currency_name,
                                                                                   currency_pair.second_currency_name,
                                                                                   get_stationarity_state(
-                                                                                  is_resid_stationarity)))
+                                                                                      is_resid_stationarity)))
     if is_resid_stationarity:
         b = model.params[0]
 
@@ -87,7 +87,6 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str=None) -> CurrencyPair
 
 
 def run(currency_pair: CurrencyPair, log_path: str = None) -> CurrencyPair:
-
     print("Выполняется проверка коинтеграции валютных пар {0} и {1}.".format(currency_pair.first_currency_name,
                                                                              currency_pair.second_currency_name))
 
@@ -96,9 +95,11 @@ def run(currency_pair: CurrencyPair, log_path: str = None) -> CurrencyPair:
 
     if log_path is not None:
         Logger.log_info(log_path,
-                 get_stationarity_state_info(currency_pair.first_currency_name, is_stationarity_first_currency))
+                        get_stationarity_state_info(currency_pair.first_currency_name,
+                                                    is_stationarity_first_currency))
         Logger.log_info(log_path,
-                 get_stationarity_state_info(currency_pair.second_currency_name, is_stationarity_second_currency))
+                        get_stationarity_state_info(currency_pair.second_currency_name,
+                                                    is_stationarity_second_currency))
 
     if is_stationarity_first_currency or is_stationarity_second_currency:
         return currency_pair
@@ -118,4 +119,3 @@ def get_stationarity_state(is_stationarity=False):
     non_stationarity_in_string = "нестационарный"
 
     return stationarity_in_string if is_stationarity else non_stationarity_in_string
-

@@ -1,5 +1,5 @@
-from trade_state_position import TradeStatePosition
-from trade_info import TradeInfo
+from objects.trade_state_position import TradeStatePosition
+from objects.trade_info import TradeInfo
 
 
 class TradeState:
