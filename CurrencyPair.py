@@ -19,8 +19,6 @@ class CurrencyPair:
         self.second_currency_volume = 0
         self.is_first_currency_closes_empty = False
         self.major_currency_name = ''
-        self.major_currency_market_purchase_price = 0
-        self.major_currency_market_sell_price = 0
 
     def set_first_currency_volume(self, volume):
         self.first_currency_volume = float(volume)
@@ -32,14 +30,12 @@ class CurrencyPair:
         return {
             self.first_currency_name: self.first_currency_market_purchase_price,
             self.second_currency_name: self.second_currency_market_purchase_price,
-            self.major_currency_name: self.major_currency_market_purchase_price
         }.get(currency_name, 0)
 
     def get_sell_price_by_currency_name(self, currency_name: str):
         return {
             self.first_currency_name: self.first_currency_market_sell_price,
             self.second_currency_name: self.second_currency_market_sell_price,
-            self.major_currency_name: self.major_currency_market_sell_price
         }.get(currency_name, 0)
 
 

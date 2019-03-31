@@ -1,7 +1,9 @@
-from enum import Enum
+from trade_state_position import TradeStatePosition
+from trade_info import TradeInfo
 
 
-class TradeStatePosition(Enum):
-    HIGH_OPENED: 0
-    LOW_OPENED: 1
-    CLOSED: 2
+class TradeState:
+    def __init__(self):
+        self.purchase_info = TradeInfo()
+        self.sell_info = TradeInfo()
+        self.trade_state_position = TradeStatePosition.CLOSED
