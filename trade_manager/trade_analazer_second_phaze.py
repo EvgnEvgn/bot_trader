@@ -1,5 +1,14 @@
 import json
 import os
+import schedule
+import time
+import random
+import numpy as np
+import json
+import datetime
+import dateparser as dp
+import matplotlib.pyplot as plt
+import pickle
 from os import path as os_path
 from config import Config, BinanceConfig
 from objects.CurrencyPair import CurrencyPair
@@ -15,9 +24,13 @@ from trade_manager.trade_stub_manager import TradeManagerStub
 from objects.wallet import Wallet
 import schedule
 import time
+import random
 from Loggers.logger import Logger
 import numpy as np
+from objects.RedisClientSingleton import RedisClientSingleton as RedisClient
+from objects.BinanceClientSingleton import BinanceClientSingleton as BinanceClient
 
+redis = RedisClient().get_client()
 
 def get_major_currency(pairs_value):
     return pairs_value.split('_')[0]
@@ -81,6 +94,7 @@ def sort_by_five_minutes():
                                                                                        currency_path,
                                                                                        client)
 
+
 # TODO
 # comision = 0.00075
 #
@@ -125,19 +139,34 @@ def sort_by_five_minutes():
 # state = State.NEED_OVER_LINE
 
 
+major_currency_name = 'BTC'
+mainPairs = 'RVNBTC_XRPBTC'
+
+
 def init_wallet() -> Wallet:
     wallet = Wallet()
     wallet.add_currency_account('RVN', 100)
     wallet.add_currency_account('XRP', 100)
     wallet.add_currency_account('BTC', 1)
+
+    wallet_redis = redis.get(RedisConfig.TEST_WALLET_KEY + mainPairs)
+    if wallet_redis is not None:
+        wallet = pickle.loads(wallet_redis)
+
     return wallet
 
 
+def init_trade_state() -> TradeState:
+    trade_state_redis = redis.get(RedisConfig.TRADE_STATE_KEY + mainPairs)
+    ret_trade_state = TradeState()
+
+    if trade_state_redis is not None:
+        ret_trade_state = pickle.loads(trade_state_redis)
+    return ret_trade_state
+
+
 trade_manager_stub = TradeManagerStub(init_wallet())
-
-trade_state = TradeState()
-
-z_array = [0, 0.7, 1.1, 0, 0.7, 1.2, 0, -0.6, -1.1, 0]
+trade_state = init_trade_state()
 
 
 def job():
@@ -151,9 +180,8 @@ def job():
     interval = BinanceConfig.TICKERS_GETTER_INTERVAL_5M
     s_date = BinanceConfig.TICKERS_GETTER_START_DATE_5M
     e_date = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')
-    client = Client(BinanceConfig.API_KEY, BinanceConfig.API_SECRET)
-    currency_pair = set_currency_pair_info(currency_pair, interval, s_date, e_date, client)
-
+    currency_pair = set_currency_pair_info(currency_pair, interval, s_date, e_date)
+    client = BinanceClient().get_client()
     result_currency_pair = set_z_score(currency_pair)
 
     z = result_currency_pair.z
@@ -212,14 +240,16 @@ def job():
                 trade_state.trade_state_position == TradeStatePosition.LOW_OPENED and last_z_value > -0.03):
             trade_manager_stub.close_position(currency_pair, trade_state)
 
+    redis.set(RedisConfig.TRADE_STATE_KEY + mainPairs, pickle.dumps(trade_state))
+    redis.set(RedisConfig.TEST_WALLET_KEY + mainPairs, pickle.dumps(trade_manager_stub.wallet))
+
     Logger.log_info('C:/ArbitrageTrading/log_check_strategy', str(trade_manager_stub.wallet.currency_accounts) + '\n')
     # print('Wallet: ')
     # print(trade_manager_stub.wallet.currency_accounts)
-
-    plt.plot(z, color='black')
-    plt.plot(np.repeat(result_currency_pair.z_upper_limit, len(z)), 'r--')
-    plt.plot(np.repeat(result_currency_pair.z_lower_limit, len(z)), 'y--')
-    plt.show()
+    # plt.plot(z, color='black')
+    # plt.plot(np.repeat(result_currency_pair.z_upper_limit, len(z)), 'r--')
+    # plt.plot(np.repeat(result_currency_pair.z_lower_limit, len(z)), 'y--')
+    # plt.show()
 
 
 schedule.every(60).seconds.do(job)
