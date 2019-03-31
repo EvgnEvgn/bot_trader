@@ -17,6 +17,7 @@ import schedule
 import time
 import random
 from logger import Logger
+import numpy as np
 
 
 def get_major_currency(pairs_value):
@@ -205,9 +206,9 @@ def job():
 
     if trade_state.trade_state_position == TradeStatePosition.CLOSED:
         if last_z_value > result_currency_pair.z_upper_limit:
-            trade_manager_stub.open_high_position(currency_pair, 10, 10, BinanceConfig.COMMISSION, trade_state)
+            trade_manager_stub.open_high_position(currency_pair, 50, 50, BinanceConfig.COMMISSION, trade_state)
         if last_z_value < result_currency_pair.z_lower_limit:
-            trade_manager_stub.open_low_position(currency_pair, 10, 10, BinanceConfig.COMMISSION, trade_state)
+            trade_manager_stub.open_low_position(currency_pair, 50, 50, BinanceConfig.COMMISSION, trade_state)
     else:
         if (trade_state.trade_state_position == TradeStatePosition.HIGH_OPENED and last_z_value < 0.03) or (
                 trade_state.trade_state_position == TradeStatePosition.LOW_OPENED and last_z_value > -0.03):
@@ -217,10 +218,10 @@ def job():
     # print('Wallet: ')
     # print(trade_manager_stub.wallet.currency_accounts)
 
-    # plt.plot(z, color='black')
-    # plt.plot(np.repeat(result_currency_pair.z_upper_limit, len(z)), 'r--')
-    # plt.plot(np.repeat(result_currency_pair.z_lower_limit, len(z)), 'y--')
-    # plt.show()
+    plt.plot(z, color='black')
+    plt.plot(np.repeat(result_currency_pair.z_upper_limit, len(z)), 'r--')
+    plt.plot(np.repeat(result_currency_pair.z_lower_limit, len(z)), 'y--')
+    plt.show()
 
 
 schedule.every(60).seconds.do(job)
