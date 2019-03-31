@@ -130,7 +130,7 @@ def get_grouped_tickers(tickers, major_currencies):
 
 def run():
 
-    client = BinanceClient
+    client = BinanceClient().get_client()
 
     tickers = client.get_all_tickers()
 
@@ -165,7 +165,6 @@ def run():
                                                            BinanceConfig.TICKERS_GETTER_START_DATE_15M,
                                                            BinanceConfig.TICKERS_GETTER_END_DATE_15M,
                                                            major_currency_path)
-
 
                     result_cointegration_currency_pair = calculate_cointegration_for_currency_pair(interval, start_date,
                                                                                                    end_date,
