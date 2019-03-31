@@ -10,27 +10,20 @@ import dateparser as dp
 import matplotlib.pyplot as plt
 import pickle
 from os import path as os_path
-from config import Config, BinanceConfig
+from config import Config, BinanceConfig, RedisConfig
 from objects.CurrencyPair import CurrencyPair
-from cointegration_analyzer.currency_pair_cointegration_analyzer import calculate_cointegration_for_currency_pair, set_currency_pair_info
-from binance.client import Client
-import dateparser as dp
+from cointegration_analyzer.currency_pair_cointegration_analyzer import set_currency_pair_info
 from trading_algorithms.ArbitrageTradingAlgorithm import set_z_score
-import datetime
-import matplotlib.pyplot as plt
 from objects.trade_state import TradeState
 from objects.trade_state_position import TradeStatePosition
 from trade_manager.trade_stub_manager import TradeManagerStub
 from objects.wallet import Wallet
-import schedule
-import time
-import random
 from Loggers.logger import Logger
-import numpy as np
 from objects.RedisClientSingleton import RedisClientSingleton as RedisClient
 from objects.BinanceClientSingleton import BinanceClientSingleton as BinanceClient
 
 redis = RedisClient().get_client()
+
 
 def get_major_currency(pairs_value):
     return pairs_value.split('_')[0]
@@ -72,27 +65,9 @@ def sort_by_five_minutes():
         print(kv[0] + ': ' + str(kv[1][get_major_currency(kv[0]) + '_volume']) +
               ': ' + str(kv[1][get_minor_currency(kv[0]) + '_volume']))
 
-    last_five_sorted_log_cointegration_info = sorted_log_cointegration_info[-10:]
+    last_five_sorted_log_cointegration_info = sorted_log_cointegration_info[-5:]
 
-    interval = BinanceConfig.TICKERS_GETTER_INTERVAL_5M
-    start_date = BinanceConfig.TICKERS_GETTER_START_DATE_5M
-    end_date = BinanceConfig.TICKERS_GETTER_END_DATE_5M
-    client = Client(BinanceConfig.API_KEY, BinanceConfig.API_SECRET)
-
-    currency_path = get_currency_path()
-    if not os.path.isdir(currency_path):
-        os.mkdir(currency_path)
-    for kv in last_five_sorted_log_cointegration_info:
-        currency_pair = CurrencyPair()
-        currency_pair.first_currency_name = get_major_currency(kv[0])
-        currency_pair.second_currency_name = get_minor_currency(kv[0])
-
-        # TODO если по first_currency данные не приходят, сделать break
-        result_cointegration_currency_pair = calculate_cointegration_for_currency_pair(interval, start_date,
-                                                                                       end_date,
-                                                                                       currency_pair,
-                                                                                       currency_path,
-                                                                                       client)
+    return last_five_sorted_log_cointegration_info
 
 
 # TODO

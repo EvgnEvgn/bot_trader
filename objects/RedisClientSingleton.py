@@ -1,6 +1,6 @@
 import redis
 from config import RedisConfig
-from Singleton import Singleton
+from objects.Singleton import Singleton
 
 
 class RedisClientSingleton(metaclass=Singleton):
