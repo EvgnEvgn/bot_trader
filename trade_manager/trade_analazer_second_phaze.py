@@ -70,50 +70,6 @@ def sort_by_five_minutes():
     return last_five_sorted_log_cointegration_info
 
 
-# TODO
-# comision = 0.00075
-#
-# RVN_BTC = client.get_ticker(symbol='RVNBTC')
-# XRP_BTC = client.get_ticker(symbol='XRPBTC')
-#
-#
-# myWallet.USDT -= myWallet.USDT * comision
-# myWallet.BTC = myWallet.USDT / RVN_BTC.bidPrice
-# myWallet.USDT = 0
-#
-# myWallet.BTC -= myWallet.BTC * comision
-# myWallet.XRP = myWallet.BTC / XRP_BTC.bidPrice
-# myWallet.BTC = 0
-#
-# myWallet.XRP -= myWallet.XRP * comision
-# myWallet.USDT = XRP_BTC.askPrice * myWallet.XRP
-# myWallet.XRP = 0
-#
-#
-# class Wallet:
-#     def __init__(self, main_currency, first_currency, second_currency):
-#         self.main_currency = main_currency
-#         self.first_currency = first_currency
-#         self.second_currency = second_currency
-#         self.main_currency_balance = 0
-#         self.first_currency_balance = 0
-#         self.second_currency_balance = 0
-#         self.total = 0
-#
-#
-# wallet = Wallet('BTC', 'RVN', 'XRP')
-# wallet.first_currency_balance = 1000
-# wallet.second_currency_balance = 1000
-#
-#
-# class State(Enum):
-#     NEED_ZERO: 0
-#     NEED_OVER_LINE: 1
-#
-#
-# state = State.NEED_OVER_LINE
-
-
 major_currency_name = 'BTC'
 mainPairs = 'RVNBTC_XRPBTC'
 
@@ -122,7 +78,7 @@ def init_wallet() -> Wallet:
     wallet = Wallet()
     wallet.add_currency_account('RVN', 100)
     wallet.add_currency_account('XRP', 100)
-    wallet.add_currency_account('BTC', 1)
+    wallet.add_currency_account(major_currency_name, 1)
 
     wallet_redis = redis.get(RedisConfig.TEST_WALLET_KEY + mainPairs)
     if wallet_redis is not None:
@@ -145,8 +101,6 @@ trade_state = init_trade_state()
 
 
 def job():
-    major_currency_name = 'BTC'
-    mainPairs = 'RVNBTC_XRPBTC'
     currency_pair = CurrencyPair()
     currency_pair.major_currency_name = major_currency_name
     currency_pair.first_currency_name = get_major_currency(mainPairs)
