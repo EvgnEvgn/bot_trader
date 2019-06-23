@@ -5,6 +5,7 @@ class Config:
     COINTEGRATION_INFO_TXT_FILENAME = 'log_cointegration_info.txt'
     SERIES_DIFFERENCE_PERCENT_THRESHOLD = 0.2
     RESIDUES_RESULT_FILENAME = 'residues.png'
+    CLOSES_CHART_FILENAME = 'closes.png'
 
 
 class BinanceConfig(Config):
@@ -27,7 +28,7 @@ class BinanceConfig(Config):
     TICKERS_GETTER_START_DATE_1H = '2018-11-28 05:00 UTC'
     TICKERS_GETTER_END_DATE_1H = '2019-03-28 05:00 UTC'
 
-    MAJOR_CURRENCIES = ['BTC', 'ETH', 'USDT', 'USDC']
+    MAJOR_CURRENCIES = ['USDT']#['BTC', 'ETH', 'USDT', 'USDC']
 
 
 class RedisConfig(Config):

@@ -7,6 +7,8 @@ class CurrencyPair:
         self.second_currency_name = ''
         self.first_currency_closes = []
         self.second_currency_closes = []
+        self.first_currency_closes_logarithmic = []
+        self.second_currency_closes_logarithmic = []
         self.first_currency_market_purchase_price = 0,
         self.first_currency_market_sell_price = 0,
         self.second_currency_market_purchase_price = 0,

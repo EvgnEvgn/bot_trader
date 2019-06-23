@@ -8,7 +8,8 @@ import os
 from exceptions.TradingAnalyzeException import TradingAnalyzeException
 from Loggers.logger import Logger
 import dateparser as dp
-from helpers.helpers import is_file_exists_in_dir
+from helpers.file_helper import is_file_exists_in_dir
+from decorators.cointegration_analyzer_decorators import logarithm_currency_pair
 
 
 def get_major_currency_path(major_currency):
@@ -24,6 +25,7 @@ def get_major_currency_path(major_currency):
     return major_currency_path
 
 
+@logarithm_currency_pair
 def set_currency_pair_info(currency_pair, interval, s_date, e_date,
                            current_currency_pair_path=None) -> CurrencyPair:
     client = BinanceClient().get_client()

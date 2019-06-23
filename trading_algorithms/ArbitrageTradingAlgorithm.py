@@ -16,7 +16,22 @@ def check_for_stationarity(X, cutoff=0.01):
         return False
 
 
-def plot_residuals(plot_path, currency_pair, residuals):
+def plot_closes(plot_path, currency_pair: CurrencyPair):
+    plt.clf()
+    plt.plot(currency_pair.first_currency_closes, color='blue')
+    plt.plot(currency_pair.second_currency_closes, color='red')
+    plt.title("Residues of pairs: {0} and {1}".format(currency_pair.first_currency_name,
+                                                      currency_pair.second_currency_name))
+    plt.legend([currency_pair.first_currency_name, currency_pair.second_currency_name])
+
+    plt.savefig('{0}/{1}{2}_{3}'.format(plot_path,
+                                        currency_pair.first_currency_name,
+                                        currency_pair.second_currency_name,
+                                        Config.CLOSES_CHART_FILENAME), figsize=(20, 10), dpi=350)
+    plt.close()
+
+
+def plot_residuals(plot_path, currency_pair: CurrencyPair, residuals):
     plt.clf()
     plt.plot(residuals, color='blue')
     plt.title("Residues of pairs: {0} and {1}".format(currency_pair.first_currency_name,
@@ -51,6 +66,7 @@ def set_z_score(currency_pair: CurrencyPair, log_path: str = None) -> CurrencyPa
     currency_pair.is_stationarity = is_resid_stationarity
 
     if log_path is not None:
+        plot_closes(log_path, currency_pair)
         plot_residuals(log_path, currency_pair, resid)
 
         Logger.log_info(log_path,
