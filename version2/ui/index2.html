@@ -1,0 +1,140 @@
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; chartset=UTF-8">
+    <script src="scripts/plotly-latest.min.js"></script>
+    <script src="scripts/jquery-3.4.1.js"></script>
+</head>
+<body>
+
+<div id="graph"></div>
+
+
+<script>
+    webSocketZEC = new WebSocket('ws://localhost:8765');
+
+
+    function getStringDate(time) {
+        const dateNow = new Date(time);
+
+        let year = dateNow.getFullYear();
+        let date = dateNow.getDate();
+        let month = dateNow.getMonth() + 1;
+        let hours = dateNow.getHours();
+        let minutes = dateNow.getMinutes();
+        let seconds = dateNow.getSeconds();
+        date = date < 10 ? '0' + date : '' + date;
+        month = month < 10 ? '0' + month : '' + month;
+        hours = hours < 10 ? '0' + hours : '' + hours;
+        minutes = minutes < 10 ? '0' + minutes : '' + minutes;
+        seconds = seconds < 10 ? '0' + seconds : '' + seconds;
+
+        return `${year}-${month}-${date} ${hours}:${minutes}:${seconds}`
+    }
+
+    let trace1 = {
+        x: [],
+        y: [],
+        line: {color: '#80CAF6'},
+        mode: 'lines',
+        name: 'z_score'
+    };
+    let trace2 = {
+        x: [],
+        y: [],
+        xaxis: 'x2',
+        yaxis: 'y2',
+        line: {color: '#DF56F1'},
+        mode: 'lines',
+        name: 'Close price(XMR)'
+    };
+    let trace3 = {
+        x: [],
+        y: [],
+        xaxis: 'x3',
+        yaxis: 'y3',
+        line: {color: '#f1c81c'},
+        mode: 'lines',
+        name: 'Close price(ZEC)'
+    };
+
+
+    let layout = {
+        grid: {rows: 3, columns: 1, pattern: 'independent'},
+        shapes: [
+            {
+                type: 'line',
+                xref: 'paper',
+                x0: 0,
+                y0: 1.0,
+                x1: 1,
+                y1: 1.0,
+                line: {
+                    color: 'rgb(255, 0, 0)',
+                    width: 2,
+                    //dash: 'dot'
+                }
+            },
+            {
+                type: 'line',
+                xref: 'paper',
+                x0: 0,
+                y0: 1.0,
+                x1: 1,
+                y1: 1.0,
+                line: {
+                    color: 'rgb(255, 0, 0)',
+                    width: 2,
+                    //dash: 'dot'
+                }
+            }],
+        height: 1000
+    };
+
+
+    //Plotly.plot('graph', [trace1]);
+
+    webSocketZEC.onmessage = function (event) {
+        const data = JSON.parse(event.data);
+        console.log(data.z_last);
+
+        if (trace1.y.length === 0) {
+
+            const timeArrayString = data.z_data.time.map(getStringDate);
+
+            trace1.y = data.z_data.z;
+            trace1.x = timeArrayString;
+
+            trace2.y = data.z_data.price1;
+            trace2.x = timeArrayString;
+
+            trace3.y = data.z_data.price2;
+            trace3.x = timeArrayString;
+            layout.shapes[0].y0 = layout.shapes[0].y1 = data.z_data.z_upper_limit;
+            layout.shapes[1].y0 = layout.shapes[1].y1 = data.z_data.z_lower_limit;
+            Plotly.plot('graph', [trace1, trace2, trace3], layout);
+            trace1.x = data.z_data.time;
+            return;
+        }
+
+
+        lastTraceX = trace1.x.slice(-1)[0];
+        lastZDataTime = data.z_data.time.slice(-1)[0];
+
+        if (lastTraceX && lastZDataTime && lastTraceX !== lastZDataTime) {
+            trace1.y = data.z_data.z;
+            trace1.x = data.z_data.time;
+            const time = getStringDate(lastZDataTime);
+            const lastZ = data.z_data.z.slice(-1)[0];
+            const lastPrice1 = data.z_data.price1.slice(-1)[0];
+            const lastPrice2 = data.z_data.price2.slice(-1)[0];
+            const update = {
+                x: [[time], [time], [time]],
+                y: [[lastZ], [lastPrice1], [lastPrice2]]
+            };
+
+            Plotly.extendTraces('graph', update, [0, 1, 2]);
+        }
+    };
+</script>
+</body>
+</html>
