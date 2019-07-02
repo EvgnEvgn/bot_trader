@@ -7,8 +7,9 @@ async function analyze() {
     const majorCurrency = 'USDT';
     const firstCurrency = 'XMR';
     const secondCurrency = 'ZEC';
-    const firstCurrencyData = await getKline(firstCurrency + majorCurrency, "1m", Date.now() - 70000000);
-    const secondCurrencyData = await getKline(secondCurrency + majorCurrency, "1m", Date.now() - 70000000);
+    const firstCurrencyData = await getKline(firstCurrency + majorCurrency, '1h', '2019-03-17 03:24:00');
+
+    const secondCurrencyData = await getKline(secondCurrency + majorCurrency, '1h', '2019-03-17 03:24:00');
 
     const result = await amqpManager.analyzePair(firstCurrencyData, secondCurrencyData);
     websocket.sendAll({z_data: result.z_data});
